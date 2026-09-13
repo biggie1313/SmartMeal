@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SmartMeal — Eat well. Spend less.</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="nav"><div class="brand">🥕 <span>SmartMeal</span></div><nav><a href="#how">How it works</a><a href="#pricing">Pricing</a><button class="btn small" onclick="showApp()">Try it free</button></nav></header>
+
+<section class="hero">
+<div class="hero-copy"><span class="pill">✨ Your week, planned in seconds</span>
+<h1>Eat well.<br><em>Spend less.</em></h1>
+<p>SmartMeal builds a personalized weekly meal plan and grocery list around your family, budget and preferences—so you stop guessing what to cook.</p>
+<div class="hero-actions"><button class="btn" onclick="showApp()">Build my free plan →</button><a href="#pricing" class="text-link">See premium features</a></div>
+<div class="trust">✓ No credit card &nbsp; ✓ Free weekly plan &nbsp; ✓ Cancel anytime</div></div>
+<div class="hero-card"><div class="mini-top"><span>This week</span><b>Budget: $90</b></div><div class="progress"><span></span></div>
+<div class="meal-row"><span>Mon</span><strong>Chicken rice bowls</strong><b>$12</b></div><div class="meal-row"><span>Tue</span><strong>Turkey tacos</strong><b>$10</b></div><div class="meal-row"><span>Wed</span><strong>Stir-fry night</strong><b>$11</b></div><div class="meal-row faded"><span>Thu</span><strong>Chickpea pasta</strong><b>$9</b></div>
+<div class="save">♻️ 8 ingredients reused this week</div></div>
+</section>
+
+<section id="how" class="section"><div class="center"><span class="eyebrow">HOW IT WORKS</span><h2>Less planning. Less waste. More dinner.</h2><p>SmartMeal turns a few preferences into a practical plan your whole household can actually follow.</p></div>
+<div class="steps"><div><span>01</span><h3>Tell us what matters</h3><p>Family size, budget, diet, dislikes and how often you want to cook.</p></div><div><span>02</span><h3>Get your week</h3><p>SmartMeal creates meals that share ingredients so your cart stays simple.</p></div><div><span>03</span><h3>Shop & cook</h3><p>Use your organized grocery list and check items off as you shop.</p></div></div></section>
+
+<section class="app-section" id="app"><div class="app-wrap"><div><span class="eyebrow">FREE PLANNER</span><h2>Build your first week</h2><p>Start free. No account or card required for this demo.</p></div>
+<div class="planner"><div class="controls"><label>Household<select id="people"><option>1</option><option>2</option><option selected>4</option><option>6</option><option>8</option></select></label>
+<label>Weekly budget<select id="budget"><option value="low">$60–$80</option><option value="mid" selected>$80–$110</option><option value="high">$110+</option></select></label>
+<label>Style<select id="diet"><option value="any">Balanced</option><option value="vegetarian">Vegetarian</option><option value="highprotein">High protein</option></select></label>
+<button class="btn" onclick="generate()">Generate my plan</button></div>
+<div id="result" class="result"></div></div></div></section>
+
+<section id="pricing" class="section pricing"><div class="center"><span class="eyebrow">PRICING</span><h2>Start free. Upgrade when SmartMeal saves you time.</h2></div>
+<div class="plans"><div class="plan"><h3>Free</h3><div class="price">$0<span>/month</span></div><p>For trying SmartMeal.</p><ul><li>1 weekly plan</li><li>Grocery checklist</li><li>Basic preferences</li></ul><button class="btn outline" onclick="showApp()">Start free</button></div>
+<div class="plan featured"><div class="popular">MOST POPULAR</div><h3>Premium</h3><div class="price">$7.99<span>/month</span></div><p>For busy households.</p><ul><li>Unlimited meal plans</li><li>Ingredient reuse optimizer</li><li>Favorites & substitutions</li><li>Nutrition targets</li><li>Price comparison (coming soon)</li></ul><button class="btn" onclick="fakeCheckout()">Start Premium</button></div>
+<div class="plan"><h3>Family</h3><div class="price">$12.99<span>/month</span></div><p>For bigger households.</p><ul><li>Everything in Premium</li><li>Multiple household profiles</li><li>Shared grocery lists</li><li>Family meal preferences</li></ul><button class="btn outline" onclick="fakeCheckout()">Choose Family</button></div></div></section>
+
+<footer><div class="brand">🥕 SmartMeal</div><p>Eat well. Spend less. Waste less.</p><small>Prototype — payments, accounts and live grocery pricing are not connected yet.</small></footer>
+<div id="toast" class="toast"></div>
+<script src="app.js"></script>
+</body></html>
