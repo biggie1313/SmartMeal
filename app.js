@@ -19,5 +19,5 @@ function generate(){
  document.getElementById("result").innerHTML=`<h3>Your personalized week <span style="color:#2e7d50">· about $${cost}</span></h3><div class="week">${plan.map((d,i)=>`<div class="day"><b>${days[i]}</b>${d.map(m=>`<div class="meal">${m}</div>`).join("")}</div>`).join("")}</div><div class="groceries">${groceries.map(g=>`<div class="gitem">☐ ${g}</div>`).join("")}</div>`;
 }
 function showApp(){document.getElementById("app").scrollIntoView({behavior:"smooth"});setTimeout(generate,300)}
-function fakeCheckout(){const t=document.getElementById("toast");t.textContent="Checkout is ready to connect to Stripe in the next build.";t.style.display="block";setTimeout(()=>t.style.display="none",3000)}
+function fakeCheckout(){window.location.href="https://buy.stripe.com/test_aFafZi5zWbbah2r7D9eZ200"}
 generate();
