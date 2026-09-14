@@ -1,5 +1,6 @@
 const SUPABASE_URL = "https://aacgociyidfzaxweygqc.supabase.co";
 const SUPABASE_KEY = "sb_publishable_lVeSyyMPkrTby8OdR1gXjg_7khM4wGR";
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 any:[
 ["Oatmeal + banana","Chicken rice bowls"],["Eggs + toast","Turkey tacos"],["Greek yogurt + berries","Chicken pasta"],
 ["Oatmeal + berries","Chicken stir-fry"],["Eggs + toast","Bean & beef chili"],["Pancakes + banana","Chicken wraps"],["Yogurt + granola","Leftover bowl"]
