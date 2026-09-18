@@ -21,6 +21,113 @@ function generate(){
  const plan=plans[diet],days=["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
  document.getElementById("result").innerHTML=`<h3>Your personalized week <span style="color:#2e7d50">· about $${cost}</span></h3><div class="week">${plan.map((d,i)=>`<div class="day"><b>${days[i]}</b>${d.map(m=>`<div class="meal">${m}</div>`).join("")}</div>`).join("")}</div><div class="groceries">${groceries.map(g=>`<div class="gitem">☐ ${g}</div>`).join("")}</div>`;
 }
-function showApp(){document.getElementById("app").scrollIntoView({behavior:"smooth"});setTimeout(generate,300)}
-function fakeCheckout(){window.location.href="https://buy.stripe.com/test_aFafZi5zWbbah2r7D9eZ200"}
-generate();
+function showApp(){
+  window.supabase.auth.getSession().then(({data}) => {
+    if (!data.session) {
+      openAuth("signup", "free");
+      return;
+    }
+    document.getElementById("app").scrollIntoView({behavior:"smooth"});
+    setTimeout(generate,300);
+  });
+}
+
+let authMode = "signup";
+let authAfter = "free";
+
+function openAuth(mode = "signup", after = "free"){
+  authMode = mode;
+  authAfter = after;
+  const modal = document.getElementById("auth-modal");
+  if (!modal) return;
+  modal.classList.add("open");
+  modal.setAttribute("aria-hidden","false");
+  updateAuthForm();
+  setTimeout(() => document.getElementById("auth-email").focus(), 50);
+}
+
+function closeAuth(){
+  const modal = document.getElementById("auth-modal");
+  if (!modal) return;
+  modal.classList.remove("open");
+  modal.setAttribute("aria-hidden","true");
+  document.getElementById("auth-message").textContent = "";
+}
+
+function toggleAuthMode(){
+  authMode = authMode === "signup" ? "signin" : "signup";
+  updateAuthForm();
+}
+
+function updateAuthForm(){
+  const signup = authMode === "signup";
+  document.getElementById("auth-title").textContent = signup ? "Create your account" : "Welcome back";
+  document.getElementById("auth-subtitle").textContent = signup
+    ? "Use your email and password to get started."
+    : "Sign in to continue to SmartMeal.";
+  document.getElementById("auth-submit").textContent = signup ? "Create account" : "Sign in";
+  document.getElementById("auth-password").autocomplete = signup ? "new-password" : "current-password";
+  document.getElementById("auth-switch").textContent = signup
+    ? "Already have an account? Sign in"
+    : "Need an account? Create one";
+}
+
+async function submitAuth(event){
+  event.preventDefault();
+
+  const email = document.getElementById("auth-email").value.trim();
+  const password = document.getElementById("auth-password").value;
+  const message = document.getElementById("auth-message");
+  const button = document.getElementById("auth-submit");
+
+  message.textContent = "";
+  button.disabled = true;
+
+  try {
+    let result;
+
+    if (authMode === "signup") {
+      result = await window.supabase.auth.signUp({ email, password });
+    } else {
+      result = await window.supabase.auth.signInWithPassword({ email, password });
+    }
+
+    if (result.error) throw result.error;
+
+    if (authMode === "signup" && !result.data.session) {
+      message.textContent = "Account created. Check your email to confirm your address, then sign in.";
+      return;
+    }
+
+    message.textContent = "Signed in successfully.";
+
+    setTimeout(() => {
+      closeAuth();
+      if (authAfter === "premium") {
+        fakeCheckout();
+      } else {
+        document.getElementById("app").scrollIntoView({behavior:"smooth"});
+        setTimeout(generate,300);
+      }
+    }, 500);
+  } catch (error) {
+    message.textContent = error.message || "Something went wrong.";
+  } finally {
+    button.disabled = false;
+  }
+}
+
+async function fakeCheckout(){
+  const { data } = await window.supabase.auth.getSession();
+  if (!data.session) {
+    openAuth("signin", "premium");
+    return;
+  }
+  window.location.href="https://buy.stripe.com/test_aFafZi5zWbbah2r7D9eZ200";
+}
+
+window.supabase.auth.onAuthStateChange((event, session) => {
+  console.log("SmartMeal auth:", event);
+});
+
+
