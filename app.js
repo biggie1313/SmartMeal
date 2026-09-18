@@ -88,7 +88,7 @@ async function submitAuth(event){
     let result;
 
     if (authMode === "signup") {
-      result = await supabaseClient.auth.signUp({ email, password });
+      result = await supabaseClient.auth.signUp({ email, password, options: { emailRedirectTo: window.location.origin } });
     } else {
       result = await supabaseClient.auth.signInWithPassword({ email, password });
     }
@@ -115,6 +115,26 @@ async function submitAuth(event){
     message.textContent = error.message || "Something went wrong.";
   } finally {
     button.disabled = false;
+  }
+}
+
+async function resendConfirmation(){
+  const email = document.getElementById("auth-email").value.trim();
+  const message = document.getElementById("auth-message");
+  if (!email) {
+    message.textContent = "Enter your email address first.";
+    return;
+  }
+  try {
+    const { error } = await supabaseClient.auth.resend({
+      type: "signup",
+      email,
+      options: { emailRedirectTo: window.location.origin }
+    });
+    if (error) throw error;
+    message.textContent = "A new confirmation email was sent. Check your inbox and spam folder.";
+  } catch (error) {
+    message.textContent = error.message || "Unable to resend the confirmation email.";
   }
 }
 
