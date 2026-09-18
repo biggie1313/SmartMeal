@@ -1,5 +1,6 @@
 const SUPABASE_URL = "https://aacgociyidfzaxweygqc.supabase.co";
 const SUPABASE_KEY = "sb_publishable_lVeSyyMPkrTby8OdR1gXjg_7khM4wGR";
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const plans={
 any:[
@@ -22,7 +23,7 @@ function generate(){
  document.getElementById("result").innerHTML=`<h3>Your personalized week <span style="color:#2e7d50">· about $${cost}</span></h3><div class="week">${plan.map((d,i)=>`<div class="day"><b>${days[i]}</b>${d.map(m=>`<div class="meal">${m}</div>`).join("")}</div>`).join("")}</div><div class="groceries">${groceries.map(g=>`<div class="gitem">☐ ${g}</div>`).join("")}</div>`;
 }
 function showApp(){
-  window.supabase.auth.getSession().then(({data}) => {
+  supabaseClient.auth.getSession().then(({data}) => {
     if (!data.session) {
       openAuth("signup", "free");
       return;
@@ -87,9 +88,9 @@ async function submitAuth(event){
     let result;
 
     if (authMode === "signup") {
-      result = await window.supabase.auth.signUp({ email, password });
+      result = await supabaseClient.auth.signUp({ email, password });
     } else {
-      result = await window.supabase.auth.signInWithPassword({ email, password });
+      result = await supabaseClient.auth.signInWithPassword({ email, password });
     }
 
     if (result.error) throw result.error;
@@ -118,7 +119,7 @@ async function submitAuth(event){
 }
 
 async function fakeCheckout(){
-  const { data } = await window.supabase.auth.getSession();
+  const { data } = await supabaseClient.auth.getSession();
   if (!data.session) {
     openAuth("signin", "premium");
     return;
@@ -126,7 +127,7 @@ async function fakeCheckout(){
   window.location.href="https://buy.stripe.com/test_aFafZi5zWbbah2r7D9eZ200";
 }
 
-window.supabase.auth.onAuthStateChange((event, session) => {
+supabaseClient.auth.onAuthStateChange((event, session) => {
   console.log("SmartMeal auth:", event);
 });
 
