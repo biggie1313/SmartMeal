@@ -16,11 +16,22 @@ highprotein:[
 ["Eggs + berries","Chicken stir-fry"],["Eggs + toast","Beef & bean chili"],["Protein pancakes","Chicken wraps"],["Eggs + oatmeal","Leftover protein bowl"]
 ]};
 const groceries=["Oats","Bananas","Eggs","Bread","Greek yogurt","Berries","Chicken breast","Rice","Tortillas","Ground turkey/beef","Beans","Pasta","Mixed vegetables","Carrots","Hummus","Apples","Peanut butter","Fruit","Granola","Cheese"];
+function selectMeal(meal){
+  const toast = document.getElementById("toast");
+  if (!toast) return;
+  toast.textContent = "Selected: " + meal;
+  toast.style.display = "block";
+  clearTimeout(window.smartMealToastTimer);
+  window.smartMealToastTimer = setTimeout(() => {
+    toast.style.display = "none";
+  }, 2500);
+}
+
 function generate(){
  const people=+document.getElementById("people").value,budget=document.getElementById("budget").value,diet=document.getElementById("diet").value;
  const base={low:70,mid:95,high:130}[budget],cost=Math.round(base*people/4);
  const plan=plans[diet],days=["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
- document.getElementById("result").innerHTML=`<h3>Your personalized week <span style="color:#2e7d50">· about $${cost}</span></h3><div class="week">${plan.map((d,i)=>`<div class="day"><b>${days[i]}</b>${d.map(m=>`<div class="meal">${m}</div>`).join("")}</div>`).join("")}</div><div class="groceries">${groceries.map(g=>`<div class="gitem">☐ ${g}</div>`).join("")}</div>`;
+ document.getElementById("result").innerHTML=`<h3>Your personalized week <span style="color:#2e7d50">· about $${cost}</span></h3><div class="week">${plan.map((d,i)=>`<div class="day"><b>${days[i]}</b>${d.map(m=>`<button type="button" class="meal" onclick="selectMeal(${JSON.stringify(m)})">${m}</button>`).join("")}</div>`).join("")}</div><div class="groceries">${groceries.map(g=>`<div class="gitem">☐ ${g}</div>`).join("")}</div>`;
 }
 function showApp(){
   supabaseClient.auth.getSession().then(({data}) => {
