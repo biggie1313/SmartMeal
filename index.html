@@ -7,7 +7,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-<header class="nav"><div class="brand">🥕 <span>SmartMeal</span></div><nav><a href="#how">How it works</a><a href="#pricing">Pricing</a><button class="btn small" onclick="showApp()">Try it free</button></nav></header>
+<header class="nav"><div class="brand">🥕 <span>SmartMeal</span></div><nav><a href="#how">How it works</a><a href="#pricing">Pricing</a><button class="btn small" onclick="openAuth('signup')">Try it free</button></nav></header>
 
 <section class="hero">
 <div class="hero-copy"><span class="pill">✨ Your week, planned in seconds</span>
@@ -23,7 +23,7 @@
 <section id="how" class="section"><div class="center"><span class="eyebrow">HOW IT WORKS</span><h2>Less planning. Less waste. More dinner.</h2><p>SmartMeal turns a few preferences into a practical plan your whole household can actually follow.</p></div>
 <div class="steps"><div><span>01</span><h3>Tell us what matters</h3><p>Family size, budget, diet, dislikes and how often you want to cook.</p></div><div><span>02</span><h3>Get your week</h3><p>SmartMeal creates meals that share ingredients so your cart stays simple.</p></div><div><span>03</span><h3>Shop & cook</h3><p>Use your organized grocery list and check items off as you shop.</p></div></div></section>
 
-<section class="app-section" id="app"><div class="app-wrap"><div><span class="eyebrow">FREE PLANNER</span><h2>Build your first week</h2><p>Start free. No account or card required for this demo.</p></div>
+<section class="app-section" id="app"><div class="app-wrap"><div><span class="eyebrow">FREE PLANNER</span><h2>Build your first week</h2><p>Create a free account to save your plan and unlock Premium later.</p></div>
 <div class="planner"><div class="controls"><label>Household<select id="people"><option>1</option><option>2</option><option selected>4</option><option>6</option><option>8</option></select></label>
 <label>Weekly budget<select id="budget"><option value="low">$60–$80</option><option value="mid" selected>$80–$110</option><option value="high">$110+</option></select></label>
 <label>Style<select id="diet"><option value="any">Balanced</option><option value="vegetarian">Vegetarian</option><option value="highprotein">High protein</option></select></label>
@@ -37,5 +37,24 @@
 
 <footer><div class="brand">🥕 SmartMeal</div><p>Eat well. Spend less. Waste less.</p><small>Prototype — payments, accounts and live grocery pricing are not connected yet.</small></footer>
 <div id="toast" class="toast"></div>
+
+<div id="auth-modal" class="auth-modal" aria-hidden="true">
+  <div class="auth-card">
+    <button class="auth-close" onclick="closeAuth()" aria-label="Close">×</button>
+    <span class="eyebrow">SMARTMEAL ACCOUNT</span>
+    <h2 id="auth-title">Create your account</h2>
+    <p id="auth-subtitle">Use your email and password to get started.</p>
+
+    <form id="auth-form" onsubmit="submitAuth(event)">
+      <label>Email<input id="auth-email" type="email" autocomplete="email" required></label>
+      <label>Password<input id="auth-password" type="password" autocomplete="current-password" minlength="6" required></label>
+      <button id="auth-submit" class="btn" type="submit">Create account</button>
+    </form>
+
+    <p id="auth-message" class="auth-message"></p>
+    <button id="auth-switch" class="text-link auth-switch" type="button" onclick="toggleAuthMode()">Already have an account? Sign in</button>
+  </div>
+</div>
+
 <script src="app.js"></script>
 </body></html>
