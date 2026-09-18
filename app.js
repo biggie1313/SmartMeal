@@ -27,11 +27,15 @@ function selectMeal(meal){
   }, 2500);
 }
 
+function escapeHtml(value){
+  return String(value).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;");
+}
+
 function generate(){
  const people=+document.getElementById("people").value,budget=document.getElementById("budget").value,diet=document.getElementById("diet").value;
  const base={low:70,mid:95,high:130}[budget],cost=Math.round(base*people/4);
  const plan=plans[diet],days=["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
- document.getElementById("result").innerHTML=`<h3>Your personalized week <span style="color:#2e7d50">· about $${cost}</span></h3><div class="week">${plan.map((d,i)=>`<div class="day"><b>${days[i]}</b>${d.map(m=>`<button type="button" class="meal" onclick="selectMeal(${JSON.stringify(m)})">${m}</button>`).join("")}</div>`).join("")}</div><div class="groceries">${groceries.map(g=>`<div class="gitem">☐ ${g}</div>`).join("")}</div>`;
+ document.getElementById("result").innerHTML=`<h3>Your personalized week <span style="color:#2e7d50">· about $${cost}</span></h3><div class="week">${plan.map((d,i)=>`<div class="day"><b>${days[i]}</b>${d.map(m=>`<button type="button" class="meal" data-meal="${escapeHtml(m)}">${escapeHtml(m)}</button>`).join("")}</div>`).join("")}</div><div class="groceries">${groceries.map(g=>`<div class="gitem">☐ ${g}</div>`).join("")}</div>`;
 }
 function showApp(){
   supabaseClient.auth.getSession().then(({data}) => {
@@ -163,3 +167,13 @@ supabaseClient.auth.onAuthStateChange((event, session) => {
 });
 
 
+
+document.addEventListener("DOMContentLoaded", () => {
+  const result = document.getElementById("result");
+  if (!result) return;
+  result.addEventListener("click", (event) => {
+    const mealButton = event.target.closest(".meal");
+    if (!mealButton) return;
+    selectMeal(mealButton.dataset.meal || "");
+  });
+});
