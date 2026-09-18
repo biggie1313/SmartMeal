@@ -159,7 +159,27 @@ async function fakeCheckout(){
     openAuth("signin", "premium");
     return;
   }
-  window.location.href="https://buy.stripe.com/test_aFafZi5zWbbah2r7D9eZ200";
+
+  try {
+    const response = await fetch("/api/create-checkout", {
+      method: "POST",
+      headers: {
+        Authorization: "Bearer " + data.session.access_token
+      }
+    });
+
+    const result = await response.json();
+
+    if (!response.ok || !result.url) {
+      throw new Error(result.error || "Unable to start checkout.");
+    }
+
+    window.location.href = result.url;
+  } catch (error) {
+    const toast = document.getElementById("toast");
+    toast.textContent = error.message || "Unable to start checkout.";
+    toast.style.display = "block";
+  }
 }
 
 supabaseClient.auth.onAuthStateChange((event, session) => {
