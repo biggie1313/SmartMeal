@@ -132,7 +132,7 @@ function generate(){
     <div class="groceries">${groceries.map(g=>`<div class="gitem">☐ ${g}</div>`).join("")}</div>`;
 }
 
-function saveCurrentPlan(){
+async function saveCurrentPlan(){
   if (!requirePremium("Saving plans")) return;
 
   const result = document.getElementById("result");
@@ -141,11 +141,37 @@ function saveCurrentPlan(){
     return;
   }
 
-  localStorage.setItem("smartmeal_saved_plan", JSON.stringify({
-    savedAt: new Date().toISOString(),
-    html: result.innerHTML
-  }));
-  showToast("⭐ This week was saved to your SmartMeal account.");
+  try {
+    const { data: sessionData } = await supabaseClient.auth.getSession();
+    const user = sessionData?.session?.user;
+
+    if (!user) {
+      openAuth("signin", "premium");
+      return;
+    }
+
+    const plan = {
+      title: "SmartMeal weekly plan",
+      saved_at: new Date().toISOString(),
+      household: document.getElementById("people")?.value || null,
+      budget: document.getElementById("budget")?.value || null,
+      diet: document.getElementById("diet")?.value || null,
+      nutrition_target: document.getElementById("nutrition-target")?.value || "balanced",
+      ingredient_reuse_optimized: document.getElementById("reuse-optimizer")?.checked === true,
+      html: result.innerHTML
+    };
+
+    const { error } = await supabaseClient
+      .from("saved_plans")
+      .insert({ user_id: user.id, plan });
+
+    if (error) throw error;
+
+    showToast("⭐ This week was saved to your SmartMeal account.");
+  } catch (error) {
+    console.error("SmartMeal save plan error:", error);
+    showToast(error.message || "Unable to save this week.");
+  }
 }
 
 function showApp(){
