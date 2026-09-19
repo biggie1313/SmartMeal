@@ -1,4 +1,5 @@
 const SUPABASE_URL = "https://aacgociyidfzaxweygqc.supabase.co";
+const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_lVeSyyMPkrTby8OdR1gXjg_7khM4wGR";
 
 module.exports = async function handler(req, res) {
   if (req.method !== "POST") {
@@ -11,17 +12,24 @@ module.exports = async function handler(req, res) {
       return res.status(401).json({ error: "Not signed in" });
     }
 
-    const accessToken = authHeader.slice(7);
+    const accessToken = authHeader.slice(7).trim();
+    if (!accessToken) {
+      return res.status(401).json({ error: "Not signed in" });
+    }
 
     const userResponse = await fetch(SUPABASE_URL + "/auth/v1/user", {
       headers: {
-        apikey: process.env.SUPABASE_SERVICE_ROLE_KEY,
+        apikey: SUPABASE_PUBLISHABLE_KEY,
         Authorization: "Bearer " + accessToken,
       },
     });
 
     if (!userResponse.ok) {
-      return res.status(401).json({ error: "Invalid session" });
+      const authErrorText = await userResponse.text();
+      console.error("Supabase auth verification failed:", userResponse.status, authErrorText);
+      return res.status(401).json({
+        error: "Supabase rejected the sign-in session (HTTP " + userResponse.status + ").",
+      });
     }
 
     const user = await userResponse.json();
