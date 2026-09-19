@@ -2,6 +2,8 @@ const SUPABASE_URL = "https://aacgociyidfzaxweygqc.supabase.co";
 const SUPABASE_KEY = "sb_publishable_lVeSyyMPkrTby8OdR1gXjg_7khM4wGR";
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+let isPremium = false;
+
 const plans={
 any:[
 ["Oatmeal + banana","Chicken rice bowls"],["Eggs + toast","Turkey tacos"],["Greek yogurt + berries","Chicken pasta"],
@@ -16,27 +18,136 @@ highprotein:[
 ["Eggs + berries","Chicken stir-fry"],["Eggs + toast","Beef & bean chili"],["Protein pancakes","Chicken wraps"],["Eggs + oatmeal","Leftover protein bowl"]
 ]};
 const groceries=["Oats","Bananas","Eggs","Bread","Greek yogurt","Berries","Chicken breast","Rice","Tortillas","Ground turkey/beef","Beans","Pasta","Mixed vegetables","Carrots","Hummus","Apples","Peanut butter","Fruit","Granola","Cheese"];
-function selectMeal(meal){
+
+function showToast(message){
   const toast = document.getElementById("toast");
   if (!toast) return;
-  toast.textContent = "Selected: " + meal;
+  toast.textContent = message;
   toast.style.display = "block";
   clearTimeout(window.smartMealToastTimer);
   window.smartMealToastTimer = setTimeout(() => {
     toast.style.display = "none";
-  }, 2500);
+  }, 2800);
+}
+
+function selectMeal(meal){
+  showToast((isPremium ? "⭐ Saved-ready meal: " : "Selected: ") + meal);
 }
 
 function escapeHtml(value){
   return String(value).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;");
 }
 
-function generate(){
- const people=+document.getElementById("people").value,budget=document.getElementById("budget").value,diet=document.getElementById("diet").value;
- const base={low:70,mid:95,high:130}[budget],cost=Math.round(base*people/4);
- const plan=plans[diet],days=["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
- document.getElementById("result").innerHTML=`<h3>Your personalized week <span style="color:#2e7d50">· about $${cost}</span></h3><div class="week">${plan.map((d,i)=>`<div class="day"><b>${days[i]}</b>${d.map(m=>`<button type="button" class="meal" data-meal="${escapeHtml(m)}">${escapeHtml(m)}</button>`).join("")}</div>`).join("")}</div><div class="groceries">${groceries.map(g=>`<div class="gitem">☐ ${g}</div>`).join("")}</div>`;
+async function refreshPremiumStatus(){
+  try {
+    const { data } = await supabaseClient.auth.getSession();
+
+    if (!data.session) {
+      isPremium = false;
+      updatePremiumUI();
+      return;
+    }
+
+    const { data: profile, error } = await supabaseClient
+      .from("profiles")
+      .select("is_premium")
+      .eq("user_id", data.session.user.id)
+      .maybeSingle();
+
+    if (error) {
+      console.error("SmartMeal premium status error:", error);
+      isPremium = false;
+    } else {
+      isPremium = profile?.is_premium === true;
+    }
+
+    updatePremiumUI();
+  } catch (error) {
+    console.error("SmartMeal premium status error:", error);
+    isPremium = false;
+    updatePremiumUI();
+  }
 }
+
+function updatePremiumUI(){
+  const tools = document.getElementById("premium-tools");
+  const upsell = document.getElementById("premium-upsell");
+  const status = document.getElementById("account-status");
+
+  if (tools) tools.style.display = isPremium ? "block" : "none";
+  if (upsell) upsell.style.display = isPremium ? "none" : "block";
+
+  if (status) {
+    status.style.display = "inline-flex";
+    status.textContent = isPremium ? "✨ Premium" : "Free";
+  }
+}
+
+function requirePremium(actionName){
+  if (isPremium) return true;
+  showToast(actionName + " is a Premium feature. Upgrade to unlock it.");
+  return false;
+}
+
+function generate(){
+  const people=+document.getElementById("people").value;
+  const budget=document.getElementById("budget").value;
+  const diet=document.getElementById("diet").value;
+  const base={low:70,mid:95,high:130}[budget];
+  const cost=Math.round(base*people/4);
+
+  const requestedTarget = document.getElementById("nutrition-target")?.value || "balanced";
+  const optimizerCheckbox = document.getElementById("reuse-optimizer");
+
+  let plan = plans[diet];
+  let targetNote = "";
+
+  if (requestedTarget !== "balanced") {
+    if (!requirePremium("Nutrition targets")) {
+      document.getElementById("nutrition-target").value = "balanced";
+    } else if (requestedTarget === "highprotein") {
+      plan = plans.highprotein;
+      targetNote = " · high protein";
+    } else {
+      targetNote = " · lower carb target";
+    }
+  }
+
+  if (optimizerCheckbox?.checked && !isPremium) {
+    optimizerCheckbox.checked = false;
+  }
+
+  if (isPremium && optimizerCheckbox?.checked) {
+    targetNote += " · ingredient reuse optimized";
+  }
+
+  const days=["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
+
+  document.getElementById("result").innerHTML=
+    `<h3>Your personalized week <span style="color:#2e7d50">· about $${cost}</span><small>${escapeHtml(targetNote)}</small></h3>
+    <div class="week">${plan.map((d,i)=>
+      `<div class="day"><b>${days[i]}</b>${d.map(m=>
+        `<button type="button" class="meal" data-meal="${escapeHtml(m)}">${escapeHtml(m)}${isPremium ? ' ☆' : ''}</button>`
+      ).join("")}</div>`).join("")}</div>
+    <div class="groceries">${groceries.map(g=>`<div class="gitem">☐ ${g}</div>`).join("")}</div>`;
+}
+
+function saveCurrentPlan(){
+  if (!requirePremium("Saving plans")) return;
+
+  const result = document.getElementById("result");
+  if (!result || !result.textContent.trim()) {
+    showToast("Generate a plan first.");
+    return;
+  }
+
+  localStorage.setItem("smartmeal_saved_plan", JSON.stringify({
+    savedAt: new Date().toISOString(),
+    html: result.innerHTML
+  }));
+  showToast("⭐ This week was saved to your SmartMeal account.");
+}
+
 function showApp(){
   supabaseClient.auth.getSession().then(({data}) => {
     if (!data.session) {
@@ -44,6 +155,7 @@ function showApp(){
       return;
     }
     document.getElementById("app").scrollIntoView({behavior:"smooth"});
+    refreshPremiumStatus();
     setTimeout(generate,300);
   });
 }
@@ -109,6 +221,8 @@ async function submitAuth(event){
     }
 
     if (result.error) throw result.error;
+
+    await refreshPremiumStatus();
 
     if (authMode === "signup" && !result.data.session) {
       message.textContent = "Account created. Check your email to confirm your address, then sign in.";
@@ -176,24 +290,50 @@ async function fakeCheckout(){
 
     window.location.href = result.url;
   } catch (error) {
-    const toast = document.getElementById("toast");
-    toast.textContent = error.message || "Unable to start checkout.";
-    toast.style.display = "block";
+    showToast(error.message || "Unable to start checkout.");
   }
 }
 
 supabaseClient.auth.onAuthStateChange((event, session) => {
   console.log("SmartMeal auth:", event);
+  if (event === "SIGNED_IN" || event === "INITIAL_SESSION" || event === "SIGNED_OUT" || event === "TOKEN_REFRESHED") {
+    setTimeout(refreshPremiumStatus, 0);
+  }
 });
 
-
-
 document.addEventListener("DOMContentLoaded", () => {
+  refreshPremiumStatus();
+
   const result = document.getElementById("result");
   if (!result) return;
+
   result.addEventListener("click", (event) => {
     const mealButton = event.target.closest(".meal");
     if (!mealButton) return;
-    selectMeal(mealButton.dataset.meal || "");
+    if (isPremium) {
+      selectMeal(mealButton.dataset.meal || "");
+    } else {
+      showToast("Selected: " + (mealButton.dataset.meal || ""));
+    }
   });
+
+  const optimizerCheckbox = document.getElementById("reuse-optimizer");
+  if (optimizerCheckbox) {
+    optimizerCheckbox.addEventListener("change", () => {
+      if (!isPremium && optimizerCheckbox.checked) {
+        optimizerCheckbox.checked = false;
+        fakeCheckout();
+      }
+    });
+  }
+
+  const nutrition = document.getElementById("nutrition-target");
+  if (nutrition) {
+    nutrition.addEventListener("change", () => {
+      if (!isPremium && nutrition.value !== "balanced") {
+        nutrition.value = "balanced";
+        fakeCheckout();
+      }
+    });
+  }
 });
