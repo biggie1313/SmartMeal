@@ -42,11 +42,19 @@ async function refreshPremiumStatus(){
   try {
     const { data } = await supabaseClient.auth.getSession();
 
+    const signupButton = document.getElementById("signup-button");
+    const signoutButton = document.getElementById("signout-button");
+
     if (!data.session) {
       isPremium = false;
+      if (signupButton) signupButton.style.display = "inline-flex";
+      if (signoutButton) signoutButton.style.display = "none";
       updatePremiumUI();
       return;
     }
+
+    if (signupButton) signupButton.style.display = "none";
+    if (signoutButton) signoutButton.style.display = "inline-flex";
 
     const { data: profile, error } = await supabaseClient
       .from("profiles")
@@ -331,6 +339,21 @@ function closeAuth(){
 function toggleAuthMode(){
   authMode = authMode === "signup" ? "signin" : "signup";
   updateAuthForm();
+}
+
+async function signOut(){
+  try {
+    const { error } = await supabaseClient.auth.signOut();
+    if (error) throw error;
+    isPremium = false;
+    updatePremiumUI();
+    await loadSavedPlans();
+    showToast("You are signed out.");
+    window.scrollTo({top: 0, behavior: "smooth"});
+  } catch (error) {
+    console.error("SmartMeal sign out error:", error);
+    showToast(error.message || "Unable to sign out.");
+  }
 }
 
 function updateAuthForm(){
