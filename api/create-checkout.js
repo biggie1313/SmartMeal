@@ -15,7 +15,7 @@ module.exports = async function handler(req, res) {
 
     const userResponse = await fetch(SUPABASE_URL + "/auth/v1/user", {
       headers: {
-        apikey: process.env.SUPABASE_PUBLISHABLE_KEY,
+        apikey: process.env.SUPABASE_SERVICE_ROLE_KEY,
         Authorization: "Bearer " + accessToken,
       },
     });
@@ -32,6 +32,7 @@ module.exports = async function handler(req, res) {
     body.set("line_items[0][quantity]", "1");
     body.set("success_url", "https://smartmeal-commercial-mvp.vercel.app/?premium=success");
     body.set("cancel_url", "https://smartmeal-commercial-mvp.vercel.app/?premium=cancel");
+    body.set("customer_email", user.email || "");
     body.set("metadata[user_id]", user.id);
     body.set("subscription_data[metadata][user_id]", user.id);
 
