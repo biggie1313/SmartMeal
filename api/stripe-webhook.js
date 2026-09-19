@@ -44,27 +44,41 @@ function verifyStripeSignature(payload, signature, secret) {
   });
 }
 
-async function stripeGet(path) {
-  const response = await fetch("https://api.stripe.com/v1/" + path, {
-    headers: {
-      Authorization: "Bearer " + process.env.STRIPE_SECRET_KEY,
-    },
-  });
+async function stripeGetCheckoutSession(sessionId) {
+  if (!process.env.STRIPE_SECRET_KEY) {
+    throw new Error("STRIPE_SECRET_KEY is not configured");
+  }
+
+  const response = await fetch(
+    "https://api.stripe.com/v1/checkout/sessions/" +
+      encodeURIComponent(sessionId),
+    {
+      headers: {
+        Authorization: "Bearer " + process.env.STRIPE_SECRET_KEY,
+      },
+    }
+  );
 
   const text = await response.text();
+
   if (!response.ok) {
-    console.error("Stripe lookup failed:", response.status, text);
-    return null;
+    throw new Error(
+      "Stripe Checkout lookup failed (HTTP " + response.status + ")"
+    );
   }
 
   try {
     return JSON.parse(text);
   } catch {
-    return null;
+    throw new Error("Stripe Checkout lookup returned invalid JSON");
   }
 }
 
 async function enablePremium(userId) {
+  if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    throw new Error("SUPABASE_SERVICE_ROLE_KEY is not configured");
+  }
+
   const updateResponse = await fetch(
     SUPABASE_URL +
       "/rest/v1/profiles?user_id=eq." +
@@ -84,11 +98,17 @@ async function enablePremium(userId) {
   const detail = await updateResponse.text();
 
   if (!updateResponse.ok) {
-    console.error("Supabase premium update failed:", detail);
-    throw new Error("Premium update failed");
+    console.error(
+      "Supabase premium update failed:",
+      updateResponse.status,
+      detail
+    );
+    throw new Error(
+      "Supabase update failed (HTTP " + updateResponse.status + ")"
+    );
   }
 
-  console.log("Premium enabled for user:", userId);
+  console.log("Premium enabled for user:", userId, detail);
 }
 
 module.exports = async function handler(req, res) {
@@ -105,12 +125,13 @@ module.exports = async function handler(req, res) {
     let session = null;
     let authenticated = false;
 
-    // Normal path: verify the Stripe webhook signature and trust its snapshot.
-    if (verifyStripeSignature(
-      payload,
-      signature,
-      process.env.STRIPE_WEBHOOK_SECRET
-    )) {
+    if (
+      verifyStripeSignature(
+        payload,
+        signature,
+        process.env.STRIPE_WEBHOOK_SECRET
+      )
+    ) {
       authenticated = true;
 
       if (
@@ -120,16 +141,16 @@ module.exports = async function handler(req, res) {
       ) {
         session = incoming.data.object;
       }
+
+      console.log("Webhook authenticated by signature:", incoming.id);
     }
 
-    // Recovery path: use Stripe's secret key to retrieve the actual Checkout Session.
-    // This also handles an out-of-sync webhook signing secret.
     if (!session && incoming.data && incoming.data.object) {
       const checkoutSessionId = incoming.data.object.id;
 
       if (checkoutSessionId) {
-        const liveSession = await stripeGet(
-          "checkout/sessions/" + encodeURIComponent(checkoutSessionId)
+        const liveSession = await stripeGetCheckoutSession(
+          checkoutSessionId
         );
 
         if (
@@ -150,8 +171,15 @@ module.exports = async function handler(req, res) {
     }
 
     if (!authenticated || !session) {
-      console.error("Webhook rejected: could not authenticate Stripe event.");
-      return res.status(400).json({ error: "Invalid Stripe webhook" });
+      console.error(
+        "Webhook rejected: could not authenticate Stripe event.",
+        incoming.id,
+        incoming.type
+      );
+      return res.status(400).json({
+        error: "Invalid Stripe webhook payload",
+        event_type: incoming.type || null
+      });
     }
 
     const userId = session.metadata && session.metadata.user_id;
@@ -161,7 +189,10 @@ module.exports = async function handler(req, res) {
         "Missing user_id in Checkout Session metadata:",
         session.id
       );
-      return res.status(400).json({ error: "Missing user ID" });
+      return res.status(400).json({
+        error: "Missing user ID in Checkout Session metadata",
+        session_id: session.id
+      });
     }
 
     await enablePremium(userId);
@@ -173,7 +204,9 @@ module.exports = async function handler(req, res) {
     });
   } catch (error) {
     console.error("Stripe webhook error:", error);
-    return res.status(500).json({ error: "Webhook processing failed" });
+    return res.status(500).json({
+      error: error.message || "Webhook processing failed"
+    });
   }
 };
 
