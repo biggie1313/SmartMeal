@@ -37,7 +37,7 @@ module.exports = async function handler(req, res) {
     const requestedPlan = req.body && req.body.plan === "family" ? "family" : "premium";
     const prices = {
       premium: "price_1UF4ZOJIwwNxJZyF12UqLgFB",
-      family: "price_1UHXkBJIwwNxJZyFdAbZJilM"
+      family: "price_1UHXoZJIwwNxJZyFi4d7VYmJ"
     };
 
     const body = new URLSearchParams();
