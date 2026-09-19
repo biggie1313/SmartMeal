@@ -74,10 +74,14 @@ async function stripeGetCheckoutSession(sessionId) {
   }
 }
 
-async function enablePremium(userId) {
+async function enablePremium(userId, session) {
   if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
     throw new Error("SUPABASE_SERVICE_ROLE_KEY is not configured");
   }
+
+  const plan = session.metadata && session.metadata.plan
+    ? session.metadata.plan
+    : "premium";
 
   const updateResponse = await fetch(
     SUPABASE_URL +
@@ -91,7 +95,15 @@ async function enablePremium(userId) {
         "Content-Type": "application/json",
         Prefer: "return=representation",
       },
-      body: JSON.stringify({ is_premium: true }),
+      body: JSON.stringify({
+        is_premium: true,
+        stripe_customer_id: session.customer || null,
+        stripe_subscription_id: typeof session.subscription === "string"
+          ? session.subscription
+          : session.subscription?.id || null,
+        subscription_plan: plan,
+        subscription_status: "active"
+      }),
     }
   );
 
@@ -110,7 +122,6 @@ async function enablePremium(userId) {
 
   console.log("Premium enabled for user:", userId, detail);
 }
-
 module.exports = async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
@@ -195,7 +206,7 @@ module.exports = async function handler(req, res) {
       });
     }
 
-    await enablePremium(userId);
+    await enablePremium(userId, session);
 
     return res.status(200).json({
       received: true,
