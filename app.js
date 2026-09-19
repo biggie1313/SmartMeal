@@ -5,6 +5,8 @@ const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 let isPremium = false;
 let subscriptionPlan = "premium";
 let currentWeek = [];
+let substitutionCursors = {};
+let favoriteMeals = new Set();
 
 const plans={
 any:[
@@ -24,6 +26,22 @@ lowercarb:[
 ["Eggs + spinach","Chicken stir-fry"],["Greek yogurt + nuts","Beef & broccoli bowls"],["Egg muffins + fruit","Chicken lettuce wraps"],["Eggs + berries","Leftover protein bowl"]
 ]};
 const groceries=["Oats","Bananas","Eggs","Bread","Greek yogurt","Berries","Chicken breast","Rice","Tortillas","Ground turkey/beef","Beans","Pasta","Mixed vegetables","Carrots","Hummus","Apples","Peanut butter","Fruit","Granola","Cheese"];
+const substitutions={
+  "Chicken rice bowls":["Turkey rice bowls","Tofu rice bowls","Chicken quinoa bowls"],
+  "Turkey tacos":["Chicken tacos","Black bean tacos","Turkey lettuce tacos"],
+  "Chicken pasta":["Turkey pasta","Chickpea pasta","Chicken pesto pasta"],
+  "Chicken stir-fry":["Turkey stir-fry","Tofu stir-fry","Shrimp stir-fry"],
+  "Bean & beef chili":["Turkey chili","Three-bean chili","Lentil chili"],
+  "Chicken wraps":["Turkey wraps","Hummus veggie wraps","Tuna wraps"],
+  "Chickpea rice bowls":["Black bean rice bowls","Tofu rice bowls","Lentil rice bowls"],
+  "Black bean tacos":["Lentil tacos","Chicken tacos","Tofu tacos"],
+  "Lentil pasta":["Chickpea pasta","Turkey pasta","Tomato basil pasta"],
+  "Tofu stir-fry":["Chickpea stir-fry","Chicken stir-fry","Turkey stir-fry"],
+  "Vegetarian chili":["Three-bean chili","Lentil chili","Chickpea chili"],
+  "Chicken salad bowls":["Turkey salad bowls","Tofu salad bowls","Tuna salad bowls"],
+  "Turkey lettuce tacos":["Chicken lettuce tacos","Black bean lettuce tacos","Turkey taco salad"],
+  "Chicken pesto vegetables":["Turkey pesto vegetables","Tofu pesto vegetables","Chicken salad"]
+};
 
 function showToast(message){
   const toast = document.getElementById("toast");
@@ -119,6 +137,18 @@ function generate(){
   const cost=Math.round(base*people/4);
 
   const requestedTarget = document.getElementById("nutrition-target")?.value || "balanced";
+  result.addEventListener("change", (event) => {
+    const checkbox = event.target.closest("[data-grocery-index]");
+    if (!checkbox) return;
+    const checks = groceryChecks();
+    checks[checkbox.dataset.groceryIndex] = checkbox.checked;
+    localStorage.setItem(groceryStorageKey(), JSON.stringify(checks));
+  });
+
+  const observer = new MutationObserver(() => enhancePlannerControls());
+  observer.observe(result, { childList: true, subtree: true });
+  enhancePlannerControls();
+
   const optimizerCheckbox = document.getElementById("reuse-optimizer");
 
   let plan = plans[diet];
@@ -198,6 +228,178 @@ async function saveCurrentPlan(){
     console.error("SmartMeal save plan error:", error);
     showToast(error.message || "Unable to save this week.");
   }
+}
+
+function groceryStorageKey(){
+  return "smartmeal:grocery-checks";
+}
+
+function groceryChecks(){
+  try { return JSON.parse(localStorage.getItem(groceryStorageKey()) || "{}"); }
+  catch { return {}; }
+}
+
+function enhancePlannerControls(){
+  const result = document.getElementById("result");
+  if (!result) return;
+  const days = Array.from(result.querySelectorAll(".day"));
+
+  result.querySelectorAll(".meal").forEach(meal => {
+    if (meal.dataset.smartEnhanced === "1") return;
+    const day = meal.closest(".day");
+    const dayIndex = days.indexOf(day);
+    const mealIndex = day ? Array.from(day.querySelectorAll(".meal")).indexOf(meal) : -1;
+    const mealName = (meal.dataset.meal || meal.textContent || "").replace(/\s+☆$/, "").trim();
+    meal.dataset.meal = mealName;
+
+    const wrapper = document.createElement("div");
+    wrapper.className = "meal-enhanced";
+    meal.parentNode.insertBefore(wrapper, meal);
+    wrapper.appendChild(meal);
+
+    const actions = document.createElement("div");
+    actions.className = "meal-actions";
+
+    const favorite = document.createElement("button");
+    favorite.type = "button";
+    favorite.className = "meal-action meal-favorite";
+    favorite.dataset.favoriteMeal = mealName;
+    favorite.textContent = favoriteMeals.has(mealName) ? "★" : "☆";
+    favorite.title = "Save meal to favorites";
+    actions.appendChild(favorite);
+
+    const swap = document.createElement("button");
+    swap.type = "button";
+    swap.className = "meal-action meal-swap";
+    swap.dataset.swapDay = String(dayIndex);
+    swap.dataset.swapMeal = String(mealIndex);
+    swap.textContent = "↔ Swap";
+    actions.appendChild(swap);
+
+    wrapper.appendChild(actions);
+    meal.dataset.smartEnhanced = "1";
+  });
+
+  const checks = groceryChecks();
+  result.querySelectorAll(".gitem").forEach((item, index) => {
+    if (item.dataset.groceryEnhanced === "1") return;
+    const label = item.textContent.replace("☐", "").trim();
+    item.textContent = "";
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.dataset.groceryIndex = String(index);
+    checkbox.checked = checks[index] === true;
+    const text = document.createElement("span");
+    text.textContent = label;
+    item.appendChild(checkbox);
+    item.appendChild(text);
+    item.dataset.groceryEnhanced = "1";
+  });
+}
+
+function updateFavoriteButtons(){
+  document.querySelectorAll(".meal-favorite").forEach(button => {
+    const meal = button.dataset.favoriteMeal || "";
+    button.textContent = favoriteMeals.has(meal) ? "★" : "☆";
+  });
+}
+
+function renderFavoriteMeals(){
+  const section = document.getElementById("favorite-meals");
+  const list = document.getElementById("favorite-meals-list");
+  if (!section || !list) return;
+  if (!isPremium) { section.style.display = "none"; list.innerHTML = ""; return; }
+  section.style.display = "block";
+  list.innerHTML = "";
+  if (favoriteMeals.size === 0) {
+    const empty = document.createElement("div");
+    empty.className = "saved-empty";
+    empty.textContent = "No favorite meals yet. Tap ☆ beside a meal to save it.";
+    list.appendChild(empty);
+    return;
+  }
+  favoriteMeals.forEach(meal => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "favorite-chip";
+    button.dataset.favoriteMeal = meal;
+    button.textContent = "★ " + meal;
+    list.appendChild(button);
+  });
+}
+
+async function loadFavorites(){
+  try {
+    const { data: sessionData } = await supabaseClient.auth.getSession();
+    const user = sessionData?.session?.user;
+    if (!user || !isPremium) {
+      favoriteMeals = new Set();
+      renderFavoriteMeals();
+      updateFavoriteButtons();
+      return;
+    }
+    const { data, error } = await supabaseClient
+      .from("favorite_meals")
+      .select("meal")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(50);
+    if (error) throw error;
+    favoriteMeals = new Set((data || []).map(item => item.meal));
+    renderFavoriteMeals();
+    updateFavoriteButtons();
+  } catch (error) {
+    console.error("SmartMeal favorites error:", error);
+  }
+}
+
+async function toggleFavorite(meal){
+  if (!requirePremium("Favorite meals")) return;
+  try {
+    const { data: sessionData } = await supabaseClient.auth.getSession();
+    const user = sessionData?.session?.user;
+    if (!user) { openAuth("signin", "premium"); return; }
+    if (favoriteMeals.has(meal)) {
+      const { error } = await supabaseClient.from("favorite_meals").delete().eq("user_id", user.id).eq("meal", meal);
+      if (error) throw error;
+      favoriteMeals.delete(meal);
+      showToast("Removed from favorites.");
+    } else {
+      const { error } = await supabaseClient.from("favorite_meals").insert({ user_id: user.id, meal });
+      if (error) throw error;
+      favoriteMeals.add(meal);
+      showToast("⭐ Added to favorites.");
+    }
+    renderFavoriteMeals();
+    updateFavoriteButtons();
+  } catch (error) {
+    console.error("SmartMeal favorite update error:", error);
+    showToast(error.message || "Unable to update favorites.");
+  }
+}
+
+function swapMeal(dayIndex, mealIndex){
+  if (!requirePremium("Meal substitutions")) return;
+  const meal = currentWeek?.[dayIndex]?.[mealIndex];
+  if (!meal) return;
+  const options = substitutions[meal] || ["Chicken bowl","Turkey bowl","Vegetable bowl"];
+  const key = dayIndex + ":" + mealIndex;
+  const cursor = substitutionCursors[key] || 0;
+  const next = options[cursor % options.length];
+  currentWeek[dayIndex][mealIndex] = next;
+  substitutionCursors[key] = cursor + 1;
+
+  const days = Array.from(document.querySelectorAll("#result .day"));
+  const day = days[dayIndex];
+  const buttons = day ? Array.from(day.querySelectorAll(".meal")) : [];
+  const button = buttons[mealIndex];
+  if (button) {
+    button.dataset.meal = next;
+    button.textContent = next + (isPremium ? " ☆" : "");
+    const favorite = button.parentElement?.parentElement?.querySelector(".meal-favorite");
+    if (favorite) { favorite.dataset.favoriteMeal = next; favorite.textContent = favoriteMeals.has(next) ? "★" : "☆"; }
+  }
+  showToast("Meal swapped to " + next + ".");
 }
 
 async function loadSavedPlans(){
@@ -285,7 +487,12 @@ async function restoreSavedPlan(planId){
     document.getElementById("reuse-optimizer").checked = plan.ingredient_reuse_optimized === true;
   }
 
+  if (Array.isArray(plan.meals) && plan.meals.length) {
+    currentWeek = plan.meals.map(day => [...day]);
+    substitutionCursors = {};
+  }
   result.innerHTML = plan.html || "";
+  enhancePlannerControls();
   document.getElementById("app").scrollIntoView({behavior:"smooth"});
   showToast("⭐ Saved plan opened.");
 }
@@ -365,8 +572,11 @@ async function signOut(){
     const { error } = await supabaseClient.auth.signOut();
     if (error) throw error;
     isPremium = false;
+    subscriptionPlan = "premium";
+    favoriteMeals = new Set();
     updatePremiumUI();
     await loadSavedPlans();
+    await loadFavorites();
     showToast("You are signed out.");
     window.scrollTo({top: 0, behavior: "smooth"});
   } catch (error) {
@@ -435,8 +645,8 @@ async function submitAuth(event){
 
     setTimeout(() => {
       closeAuth();
-      if (authAfter === "premium") {
-        fakeCheckout();
+      if (authAfter === "premium" || authAfter === "family") {
+        fakeCheckout(authAfter);
       } else {
         document.getElementById("app").scrollIntoView({behavior:"smooth"});
         setTimeout(generate,300);
@@ -553,13 +763,13 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   result.addEventListener("click", (event) => {
+    const favoriteButton = event.target.closest(".meal-favorite");
+    if (favoriteButton) { toggleFavorite(favoriteButton.dataset.favoriteMeal || ""); return; }
+    const swapButton = event.target.closest(".meal-swap");
+    if (swapButton) { swapMeal(Number(swapButton.dataset.swapDay), Number(swapButton.dataset.swapMeal)); return; }
     const mealButton = event.target.closest(".meal");
     if (!mealButton) return;
-    if (isPremium) {
-      selectMeal(mealButton.dataset.meal || "");
-    } else {
-      showToast("Selected: " + (mealButton.dataset.meal || ""));
-    }
+    selectMeal((mealButton.dataset.meal || "").replace(/\s+☆$/, ""));
   });
 
   const optimizerCheckbox = document.getElementById("reuse-optimizer");
