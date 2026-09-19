@@ -44,25 +44,24 @@ function verifyStripeSignature(payload, signature, secret) {
   });
 }
 
-async function getStripeEvent(eventId) {
-  if (!eventId || !process.env.STRIPE_SECRET_KEY) return null;
+async function stripeGet(path) {
+  const response = await fetch("https://api.stripe.com/v1/" + path, {
+    headers: {
+      Authorization: "Bearer " + process.env.STRIPE_SECRET_KEY,
+    },
+  });
 
-  const response = await fetch(
-    "https://api.stripe.com/v1/events/" + encodeURIComponent(eventId),
-    {
-      headers: {
-        Authorization: "Bearer " + process.env.STRIPE_SECRET_KEY,
-      },
-    }
-  );
-
+  const text = await response.text();
   if (!response.ok) {
-    const detail = await response.text();
-    console.error("Stripe event lookup failed:", response.status, detail);
+    console.error("Stripe lookup failed:", response.status, text);
     return null;
   }
 
-  return response.json();
+  try {
+    return JSON.parse(text);
+  } catch {
+    return null;
+  }
 }
 
 async function enablePremium(userId) {
@@ -89,7 +88,7 @@ async function enablePremium(userId) {
     throw new Error("Premium update failed");
   }
 
-  console.log("Premium enabled for user:", userId, detail);
+  console.log("Premium enabled for user:", userId);
 }
 
 module.exports = async function handler(req, res) {
@@ -100,55 +99,77 @@ module.exports = async function handler(req, res) {
   try {
     const payload = await getRawBody(req);
     const rawText = payload.toString("utf8");
-
-    let event = null;
+    const incoming = JSON.parse(rawText);
     const signature = req.headers["stripe-signature"];
 
-    // Prefer normal Stripe signature verification.
+    let session = null;
+    let authenticated = false;
+
+    // Normal path: verify the Stripe webhook signature and trust its snapshot.
     if (verifyStripeSignature(
       payload,
       signature,
       process.env.STRIPE_WEBHOOK_SECRET
     )) {
-      event = JSON.parse(rawText);
-    } else {
-      // Fallback: retrieve the event from Stripe using the server secret.
-      // This keeps fulfillment working if the endpoint's signing secret
-      // is out of sync, while still accepting only a real Stripe event ID.
-      const incoming = JSON.parse(rawText);
-      event = await getStripeEvent(incoming.id);
+      authenticated = true;
 
-      if (!event) {
-        console.error(
-          "Webhook rejected: invalid signature and Stripe event could not be retrieved."
-        );
-        return res.status(400).json({ error: "Invalid Stripe webhook" });
+      if (
+        incoming.type === "checkout.session.completed" &&
+        incoming.data &&
+        incoming.data.object
+      ) {
+        session = incoming.data.object;
       }
-
-      console.log("Webhook authenticated by Stripe event lookup:", event.id);
     }
 
-    console.log("Stripe webhook received:", event.type, event.id);
+    // Recovery path: use Stripe's secret key to retrieve the actual Checkout Session.
+    // This also handles an out-of-sync webhook signing secret.
+    if (!session && incoming.data && incoming.data.object) {
+      const checkoutSessionId = incoming.data.object.id;
 
-    if (event.type === "checkout.session.completed") {
-      const session = event.data && event.data.object;
-      const userId = session && session.metadata && session.metadata.user_id;
-
-      if (!userId) {
-        console.error(
-          "Missing user_id in Checkout Session metadata:",
-          event.id
+      if (checkoutSessionId) {
+        const liveSession = await stripeGet(
+          "checkout/sessions/" + encodeURIComponent(checkoutSessionId)
         );
-        return res.status(400).json({ error: "Missing user ID" });
-      }
 
-      await enablePremium(userId);
+        if (
+          liveSession &&
+          liveSession.id === checkoutSessionId &&
+          liveSession.mode === "subscription" &&
+          liveSession.status === "complete" &&
+          liveSession.payment_status === "paid"
+        ) {
+          session = liveSession;
+          authenticated = true;
+          console.log(
+            "Webhook authenticated by Stripe Checkout Session lookup:",
+            checkoutSessionId
+          );
+        }
+      }
     }
+
+    if (!authenticated || !session) {
+      console.error("Webhook rejected: could not authenticate Stripe event.");
+      return res.status(400).json({ error: "Invalid Stripe webhook" });
+    }
+
+    const userId = session.metadata && session.metadata.user_id;
+
+    if (!userId) {
+      console.error(
+        "Missing user_id in Checkout Session metadata:",
+        session.id
+      );
+      return res.status(400).json({ error: "Missing user ID" });
+    }
+
+    await enablePremium(userId);
 
     return res.status(200).json({
       received: true,
-      type: event.type,
-      id: event.id,
+      type: incoming.type || "checkout.session.completed",
+      session_id: session.id,
     });
   } catch (error) {
     console.error("Stripe webhook error:", error);
