@@ -77,6 +77,8 @@ async function refreshPremiumStatus(){
       if (status) status.style.display = "none";
       subscriptionPlan = "premium";
       updatePremiumUI();
+      await loadSavedPlans();
+      await loadFavorites();
       return;
     }
 
@@ -100,12 +102,14 @@ async function refreshPremiumStatus(){
 
     updatePremiumUI();
     await loadSavedPlans();
+    await loadFavorites();
   } catch (error) {
     console.error("SmartMeal premium status error:", error);
     isPremium = false;
     subscriptionPlan = "premium";
     updatePremiumUI();
     await loadSavedPlans();
+    await loadFavorites();
   }
 }
 
@@ -137,18 +141,6 @@ function generate(){
   const cost=Math.round(base*people/4);
 
   const requestedTarget = document.getElementById("nutrition-target")?.value || "balanced";
-  result.addEventListener("change", (event) => {
-    const checkbox = event.target.closest("[data-grocery-index]");
-    if (!checkbox) return;
-    const checks = groceryChecks();
-    checks[checkbox.dataset.groceryIndex] = checkbox.checked;
-    localStorage.setItem(groceryStorageKey(), JSON.stringify(checks));
-  });
-
-  const observer = new MutationObserver(() => enhancePlannerControls());
-  observer.observe(result, { childList: true, subtree: true });
-  enhancePlannerControls();
-
   const optimizerCheckbox = document.getElementById("reuse-optimizer");
 
   let plan = plans[diet];
@@ -200,7 +192,7 @@ async function saveCurrentPlan(){
     const user = sessionData?.session?.user;
 
     if (!user) {
-      openAuth("signin", "premium");
+      openAuth("signin", plan);
       return;
     }
 
@@ -751,6 +743,18 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const result = document.getElementById("result");
   if (!result) return;
+
+  result.addEventListener("change", (event) => {
+    const checkbox = event.target.closest("[data-grocery-index]");
+    if (!checkbox) return;
+    const checks = groceryChecks();
+    checks[checkbox.dataset.groceryIndex] = checkbox.checked;
+    localStorage.setItem(groceryStorageKey(), JSON.stringify(checks));
+  });
+
+  const observer = new MutationObserver(() => enhancePlannerControls());
+  observer.observe(result, { childList: true, subtree: true });
+  enhancePlannerControls();
 
   const savedList = document.getElementById("saved-plans-list");
   if (savedList) {
