@@ -168,9 +168,127 @@ async function saveCurrentPlan(){
     if (error) throw error;
 
     showToast("⭐ This week was saved to your SmartMeal account.");
+    await loadSavedPlans();
   } catch (error) {
     console.error("SmartMeal save plan error:", error);
     showToast(error.message || "Unable to save this week.");
+  }
+}
+
+async function loadSavedPlans(){
+  const savedSection = document.getElementById("saved-plans");
+  const list = document.getElementById("saved-plans-list");
+  if (!savedSection || !list) return;
+
+  try {
+    const { data: sessionData } = await supabaseClient.auth.getSession();
+    const user = sessionData?.session?.user;
+
+    if (!user || !isPremium) {
+      savedSection.style.display = "none";
+      list.innerHTML = "";
+      return;
+    }
+
+    const { data, error } = await supabaseClient
+      .from("saved_plans")
+      .select("id, created_at, plan")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(20);
+
+    if (error) throw error;
+
+    savedSection.style.display = "block";
+
+    if (!data || data.length === 0) {
+      list.innerHTML = `<div class="saved-empty">No saved plans yet. Generate a week and click “Save this week”.</div>`;
+      return;
+    }
+
+    list.innerHTML = data.map(item => {
+      const plan = item.plan || {};
+      const created = item.created_at ? new Date(item.created_at).toLocaleString() : "Saved plan";
+      const household = plan.household ? plan.household + " people" : "";
+      const diet = plan.diet === "vegetarian" ? "Vegetarian" : plan.diet === "highprotein" ? "High protein" : "Balanced";
+      const budget = plan.budget === "low" ? "$60–$80" : plan.budget === "high" ? "$110+" : "$80–$110";
+      return `
+        <article class="saved-plan-card">
+          <div class="saved-plan-top">
+            <div>
+              <h4>${escapeHtml(plan.title || "SmartMeal weekly plan")}</h4>
+              <small>${escapeHtml(created)}</small>
+            </div>
+            <span class="pill">PREMIUM</span>
+          </div>
+          <p>${escapeHtml(diet)} · ${escapeHtml(budget)}${household ? " · " + escapeHtml(household) : ""}</p>
+          <div class="saved-plan-actions">
+            <button class="btn small" type="button" data-restore-plan="${escapeHtml(item.id)}">Open plan</button>
+            <button class="btn outline small" type="button" data-delete-plan="${escapeHtml(item.id)}">Delete</button>
+          </div>
+        </article>`;
+    }).join("");
+
+    list._plans = new Map(data.map(item => [item.id, item.plan || {}]));
+  } catch (error) {
+    console.error("SmartMeal saved plans error:", error);
+    savedSection.style.display = "block";
+    list.innerHTML = `<div class="saved-empty">Unable to load saved plans right now.</div>`;
+  }
+}
+
+async function restoreSavedPlan(planId){
+  const list = document.getElementById("saved-plans-list");
+  const plan = list?._plans?.get(planId);
+  if (!plan) {
+    showToast("Saved plan not found.");
+    return;
+  }
+
+  if (!requirePremium("Saved plans")) return;
+
+  const result = document.getElementById("result");
+  if (!result) return;
+
+  if (plan.household) document.getElementById("people").value = plan.household;
+  if (plan.budget) document.getElementById("budget").value = plan.budget;
+  if (plan.diet) document.getElementById("diet").value = plan.diet;
+  if (document.getElementById("nutrition-target") && plan.nutrition_target) {
+    document.getElementById("nutrition-target").value = plan.nutrition_target;
+  }
+  if (document.getElementById("reuse-optimizer")) {
+    document.getElementById("reuse-optimizer").checked = plan.ingredient_reuse_optimized === true;
+  }
+
+  result.innerHTML = plan.html || "";
+  document.getElementById("app").scrollIntoView({behavior:"smooth"});
+  showToast("⭐ Saved plan opened.");
+}
+
+async function deleteSavedPlan(planId){
+  if (!requirePremium("Deleting saved plans")) return;
+
+  try {
+    const { data: sessionData } = await supabaseClient.auth.getSession();
+    const user = sessionData?.session?.user;
+    if (!user) {
+      openAuth("signin", "premium");
+      return;
+    }
+
+    const { error } = await supabaseClient
+      .from("saved_plans")
+      .delete()
+      .eq("id", planId)
+      .eq("user_id", user.id);
+
+    if (error) throw error;
+
+    showToast("Saved plan deleted.");
+    await loadSavedPlans();
+  } catch (error) {
+    console.error("SmartMeal delete saved plan error:", error);
+    showToast(error.message || "Unable to delete saved plan.");
   }
 }
 
@@ -332,6 +450,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const result = document.getElementById("result");
   if (!result) return;
+
+  const savedList = document.getElementById("saved-plans-list");
+  if (savedList) {
+    savedList.addEventListener("click", (event) => {
+      const restoreButton = event.target.closest("[data-restore-plan]");
+      if (restoreButton) restoreSavedPlan(restoreButton.dataset.restorePlan);
+      const deleteButton = event.target.closest("[data-delete-plan]");
+      if (deleteButton) deleteSavedPlan(deleteButton.dataset.deletePlan);
+    });
+  }
 
   result.addEventListener("click", (event) => {
     const mealButton = event.target.closest(".meal");
