@@ -62,10 +62,12 @@ async function refreshPremiumStatus(){
     }
 
     updatePremiumUI();
+    await loadSavedPlans();
   } catch (error) {
     console.error("SmartMeal premium status error:", error);
     isPremium = false;
     updatePremiumUI();
+    await loadSavedPlans();
   }
 }
 
