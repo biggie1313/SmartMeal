@@ -36,7 +36,7 @@
   <div style="display:flex;gap:14px;flex-wrap:wrap;margin-top:14px">
     <label style="min-width:180px">Nutrition target<select id="nutrition-target"><option value="balanced">Balanced</option><option value="highprotein">High protein</option><option value="lowercarb">Lower carb</option></select></label>
     <label style="display:flex;align-items:center;gap:8px;min-width:220px"><input id="reuse-optimizer" type="checkbox" checked> Optimize ingredient reuse</label>
-    <button class="btn outline" type="button" onclick="saveCurrentPlan()">♡ Save this week</button>
+    <button class="btn outline" type="button" onclick="saveCurrentPlan()">♡ Save this week</button><button class="btn outline" type="button" onclick="openCustomerPortal()">Manage subscription</button>
   </div>
 </div>
 <div id="premium-upsell" class="premium-upsell" style="margin:18px 0;padding:16px;border:1px dashed #bbb;border-radius:14px">
@@ -58,7 +58,7 @@
 <section id="pricing" class="section pricing"><div class="center"><span class="eyebrow">PRICING</span><h2>Start free. Upgrade when SmartMeal saves you time.</h2></div>
 <div class="plans"><div class="plan"><h3>Free</h3><div class="price">$0<span>/month</span></div><p>For trying SmartMeal.</p><ul><li>1 weekly plan</li><li>Grocery checklist</li><li>Basic preferences</li></ul><button class="btn outline" onclick="showApp()">Start free</button></div>
 <div class="plan featured"><div class="popular">MOST POPULAR</div><h3>Premium</h3><div class="price">$7.99<span>/month</span></div><p>For busy households.</p><ul><li>Unlimited meal plans</li><li>Ingredient reuse optimizer</li><li>Favorites & substitutions</li><li>Nutrition targets</li><li>Price comparison (coming soon)</li></ul><button class="btn" onclick="fakeCheckout()">Start Premium</button></div>
-<div class="plan"><h3>Family</h3><div class="price">$12.99<span>/month</span></div><p>For bigger households.</p><ul><li>Everything in Premium</li><li>Multiple household profiles</li><li>Shared grocery lists</li><li>Family meal preferences</li></ul><button class="btn outline" onclick="fakeCheckout()">Choose Family</button></div></div></section>
+<div class="plan"><h3>Family</h3><div class="price">$12.99<span>/month</span></div><p>For bigger households.</p><ul><li>Everything in Premium</li><li>Multiple household profiles</li><li>Shared grocery lists</li><li>Family meal preferences</li></ul><button class="btn outline" type="button" onclick="fakeCheckout('family')">Choose Family</button></div></div></section>
 
 <footer><div class="brand">🥕 SmartMeal</div><p>Eat well. Spend less. Waste less.</p><small>Payments, accounts and Premium access are connected. Saved plans are stored in your SmartMeal account.</small></footer>
 <div id="toast" class="toast"></div>
@@ -71,12 +71,13 @@
     <p id="auth-subtitle">Use your email and password to get started.</p>
 
     <form id="auth-form" onsubmit="submitAuth(event)">
-      <label>Email<input id="auth-email" type="email" autocomplete="email" required></label>
-      <label>Password<input id="auth-password" type="password" autocomplete="current-password" minlength="6" required></label>
+      <label id="auth-email-label">Email<input id="auth-email" type="email" autocomplete="email" required></label>
+      <label id="auth-password-label">Password<input id="auth-password" type="password" autocomplete="current-password" minlength="6" required></label>
       <button id="auth-submit" class="btn" type="submit">Create account</button>
     </form>
 
     <p id="auth-message" class="auth-message"></p>
+    <button id="auth-reset" class="text-link auth-switch" type="button" onclick="requestPasswordReset()">Forgot password?</button>
     <button id="auth-resend" class="text-link auth-switch" type="button" onclick="resendConfirmation()">Resend confirmation email</button>
     <button id="auth-switch" class="text-link auth-switch" type="button" onclick="toggleAuthMode()">Already have an account? Sign in</button>
   </div>
