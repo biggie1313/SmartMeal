@@ -44,14 +44,23 @@
   <div style="margin:6px 0 12px">Upgrade to unlock nutrition targets, ingredient-reuse optimization, and saved favorites.</div>
   <button class="btn small" type="button" onclick="fakeCheckout()">Unlock Premium — $7.99/month</button>
 </div>
-<div id="result" class="result"></div></div></div></section>
+<div id="result" class="result"></div>
+
+<div id="saved-plans" class="saved-plans" style="display:none;margin-top:34px">
+  <div style="display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap">
+    <div><span class="eyebrow">MY ACCOUNT</span><h3 style="margin:4px 0">My saved plans</h3><p style="margin:0;color:#66736a">Your saved weeks are stored with your SmartMeal account.</p></div>
+    <button class="btn outline small" type="button" onclick="loadSavedPlans()">↻ Refresh</button>
+  </div>
+  <div id="saved-plans-list" class="saved-plans-list"></div>
+</div>
+</div></div></section>
 
 <section id="pricing" class="section pricing"><div class="center"><span class="eyebrow">PRICING</span><h2>Start free. Upgrade when SmartMeal saves you time.</h2></div>
 <div class="plans"><div class="plan"><h3>Free</h3><div class="price">$0<span>/month</span></div><p>For trying SmartMeal.</p><ul><li>1 weekly plan</li><li>Grocery checklist</li><li>Basic preferences</li></ul><button class="btn outline" onclick="showApp()">Start free</button></div>
 <div class="plan featured"><div class="popular">MOST POPULAR</div><h3>Premium</h3><div class="price">$7.99<span>/month</span></div><p>For busy households.</p><ul><li>Unlimited meal plans</li><li>Ingredient reuse optimizer</li><li>Favorites & substitutions</li><li>Nutrition targets</li><li>Price comparison (coming soon)</li></ul><button class="btn" onclick="fakeCheckout()">Start Premium</button></div>
 <div class="plan"><h3>Family</h3><div class="price">$12.99<span>/month</span></div><p>For bigger households.</p><ul><li>Everything in Premium</li><li>Multiple household profiles</li><li>Shared grocery lists</li><li>Family meal preferences</li></ul><button class="btn outline" onclick="fakeCheckout()">Choose Family</button></div></div></section>
 
-<footer><div class="brand">🥕 SmartMeal</div><p>Eat well. Spend less. Waste less.</p><small>Payments, accounts and Premium access are connected. Live grocery pricing is not connected yet.</small></footer>
+<footer><div class="brand">🥕 SmartMeal</div><p>Eat well. Spend less. Waste less.</p><small>Payments, accounts and Premium access are connected. Saved plans are stored in your SmartMeal account.</small></footer>
 <div id="toast" class="toast"></div>
 
 <div id="auth-modal" class="auth-modal" aria-hidden="true">
@@ -73,5 +82,5 @@
   </div>
 </div>
 
-<script src="app.js?v=20260919-premium1"></script>
+<script src="app.js?v=20260919-savedplans"></script>
 </body></html>
