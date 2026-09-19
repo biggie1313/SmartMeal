@@ -122,7 +122,6 @@ function updatePremiumUI(){
   if (upsell) upsell.style.display = isPremium ? "none" : "block";
 
   if (status) {
-    status.style.display = "inline-flex";
     status.textContent = isPremium ? (subscriptionPlan === "family" ? "✨ Family Premium" : "✨ Premium") : "Free";
   }
 }
@@ -689,7 +688,7 @@ async function resendConfirmation(){
 async function fakeCheckout(plan = "premium"){
   const { data } = await supabaseClient.auth.getSession();
   if (!data.session) {
-    openAuth("signin", "premium");
+    openAuth("signin", plan);
     return;
   }
   try {
@@ -755,6 +754,14 @@ document.addEventListener("DOMContentLoaded", () => {
   const observer = new MutationObserver(() => enhancePlannerControls());
   observer.observe(result, { childList: true, subtree: true });
   enhancePlannerControls();
+
+  const favoriteList = document.getElementById("favorite-meals-list");
+  if (favoriteList) {
+    favoriteList.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-favorite-meal]");
+      if (button) toggleFavorite(button.dataset.favoriteMeal || "");
+    });
+  }
 
   const savedList = document.getElementById("saved-plans-list");
   if (savedList) {
