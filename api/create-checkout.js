@@ -34,15 +34,23 @@ module.exports = async function handler(req, res) {
 
     const user = await userResponse.json();
 
+    const requestedPlan = req.body && req.body.plan === "family" ? "family" : "premium";
+    const prices = {
+      premium: "price_1UF4ZOJIwwNxJZyF12UqLgFB",
+      family: "price_1UHXkBJIwwNxJZyFdAbZJilM"
+    };
+
     const body = new URLSearchParams();
     body.set("mode", "subscription");
-    body.set("line_items[0][price]", "price_1UF4ZOJIwwNxJZyF12UqLgFB");
+    body.set("line_items[0][price]", prices[requestedPlan]);
     body.set("line_items[0][quantity]", "1");
     body.set("success_url", "https://smartmeal-commercial-mvp.vercel.app/?premium=success");
     body.set("cancel_url", "https://smartmeal-commercial-mvp.vercel.app/?premium=cancel");
     body.set("customer_email", user.email || "");
     body.set("metadata[user_id]", user.id);
+    body.set("metadata[plan]", requestedPlan);
     body.set("subscription_data[metadata][user_id]", user.id);
+    body.set("subscription_data[metadata][plan]", requestedPlan);
 
     const stripeResponse = await fetch("https://api.stripe.com/v1/checkout/sessions", {
       method: "POST",
@@ -60,7 +68,7 @@ module.exports = async function handler(req, res) {
       return res.status(500).json({ error: "Unable to create checkout session" });
     }
 
-    return res.status(200).json({ url: stripeData.url });
+    return res.status(200).json({ url: stripeData.url, plan: requestedPlan });
   } catch (error) {
     console.error("Checkout endpoint error:", error);
     return res.status(500).json({ error: "Checkout failed" });
