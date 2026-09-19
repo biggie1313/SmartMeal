@@ -3,6 +3,8 @@ const SUPABASE_KEY = "sb_publishable_lVeSyyMPkrTby8OdR1gXjg_7khM4wGR";
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let isPremium = false;
+let subscriptionPlan = "premium";
+let currentWeek = [];
 
 const plans={
 any:[
@@ -16,6 +18,10 @@ vegetarian:[
 highprotein:[
 ["Eggs + oatmeal","Chicken rice bowls"],["Eggs + toast","Turkey tacos"],["Protein oats","Chicken pasta"],
 ["Eggs + berries","Chicken stir-fry"],["Eggs + toast","Beef & bean chili"],["Protein pancakes","Chicken wraps"],["Eggs + oatmeal","Leftover protein bowl"]
+],
+lowercarb:[
+["Eggs + avocado","Chicken salad bowls"],["Greek yogurt + berries","Turkey lettuce tacos"],["Cottage cheese + fruit","Chicken pesto vegetables"],
+["Eggs + spinach","Chicken stir-fry"],["Greek yogurt + nuts","Beef & broccoli bowls"],["Egg muffins + fruit","Chicken lettuce wraps"],["Eggs + berries","Leftover protein bowl"]
 ]};
 const groceries=["Oats","Bananas","Eggs","Bread","Greek yogurt","Berries","Chicken breast","Rice","Tortillas","Ground turkey/beef","Beans","Pasta","Mixed vegetables","Carrots","Hummus","Apples","Peanut butter","Fruit","Granola","Cheese"];
 
@@ -44,21 +50,25 @@ async function refreshPremiumStatus(){
 
     const signupButton = document.getElementById("signup-button");
     const signoutButton = document.getElementById("signout-button");
+    const status = document.getElementById("account-status");
 
     if (!data.session) {
       isPremium = false;
       if (signupButton) signupButton.style.display = "inline-flex";
       if (signoutButton) signoutButton.style.display = "none";
+      if (status) status.style.display = "none";
+      subscriptionPlan = "premium";
       updatePremiumUI();
       return;
     }
 
     if (signupButton) signupButton.style.display = "none";
     if (signoutButton) signoutButton.style.display = "inline-flex";
+    if (status) status.style.display = "inline-flex";
 
     const { data: profile, error } = await supabaseClient
       .from("profiles")
-      .select("is_premium")
+      .select("is_premium, subscription_plan, subscription_status")
       .eq("user_id", data.session.user.id)
       .maybeSingle();
 
@@ -67,6 +77,7 @@ async function refreshPremiumStatus(){
       isPremium = false;
     } else {
       isPremium = profile?.is_premium === true;
+      subscriptionPlan = profile?.subscription_plan || "premium";
     }
 
     updatePremiumUI();
@@ -74,6 +85,7 @@ async function refreshPremiumStatus(){
   } catch (error) {
     console.error("SmartMeal premium status error:", error);
     isPremium = false;
+    subscriptionPlan = "premium";
     updatePremiumUI();
     await loadSavedPlans();
   }
@@ -89,7 +101,7 @@ function updatePremiumUI(){
 
   if (status) {
     status.style.display = "inline-flex";
-    status.textContent = isPremium ? "✨ Premium" : "Free";
+    status.textContent = isPremium ? (subscriptionPlan === "family" ? "✨ Family Premium" : "✨ Premium") : "Free";
   }
 }
 
@@ -118,7 +130,8 @@ function generate(){
     } else if (requestedTarget === "highprotein") {
       plan = plans.highprotein;
       targetNote = " · high protein";
-    } else {
+    } else if (requestedTarget === "lowercarb") {
+      plan = plans.lowercarb;
       targetNote = " · lower carb target";
     }
   }
@@ -131,6 +144,7 @@ function generate(){
     targetNote += " · ingredient reuse optimized";
   }
 
+  currentWeek = plan.map(day => [...day]);
   const days=["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
 
   document.getElementById("result").innerHTML=
@@ -168,6 +182,7 @@ async function saveCurrentPlan(){
       diet: document.getElementById("diet")?.value || null,
       nutrition_target: document.getElementById("nutrition-target")?.value || "balanced",
       ingredient_reuse_optimized: document.getElementById("reuse-optimizer")?.checked === true,
+      meals: currentWeek.map(day => [...day]),
       html: result.innerHTML
     };
 
@@ -325,7 +340,7 @@ function openAuth(mode = "signup", after = "free"){
   modal.classList.add("open");
   modal.setAttribute("aria-hidden","false");
   updateAuthForm();
-  setTimeout(() => document.getElementById("auth-email").focus(), 50);
+  setTimeout(() => document.getElementById(authMode === "reset" ? "auth-password" : "auth-email").focus(), 50);
 }
 
 function closeAuth(){
@@ -337,7 +352,11 @@ function closeAuth(){
 }
 
 function toggleAuthMode(){
-  authMode = authMode === "signup" ? "signin" : "signup";
+  if (authMode === "reset") {
+    authMode = "signin";
+  } else {
+    authMode = authMode === "signup" ? "signin" : "signup";
+  }
   updateAuthForm();
 }
 
@@ -358,15 +377,21 @@ async function signOut(){
 
 function updateAuthForm(){
   const signup = authMode === "signup";
-  document.getElementById("auth-title").textContent = signup ? "Create your account" : "Welcome back";
-  document.getElementById("auth-subtitle").textContent = signup
-    ? "Use your email and password to get started."
-    : "Sign in to continue to SmartMeal.";
-  document.getElementById("auth-submit").textContent = signup ? "Create account" : "Sign in";
-  document.getElementById("auth-password").autocomplete = signup ? "new-password" : "current-password";
-  document.getElementById("auth-switch").textContent = signup
-    ? "Already have an account? Sign in"
-    : "Need an account? Create one";
+  const signin = authMode === "signin";
+  const reset = authMode === "reset";
+  const emailLabel = document.getElementById("auth-email-label");
+  const resetButton = document.getElementById("auth-reset");
+  const resendButton = document.getElementById("auth-resend");
+  const switchButton = document.getElementById("auth-switch");
+  document.getElementById("auth-title").textContent = signup ? "Create your account" : reset ? "Choose a new password" : "Welcome back";
+  document.getElementById("auth-subtitle").textContent = signup ? "Use your email and password to get started." : reset ? "Enter a new password for your SmartMeal account." : "Sign in to continue to SmartMeal.";
+  document.getElementById("auth-submit").textContent = signup ? "Create account" : reset ? "Update password" : "Sign in";
+  document.getElementById("auth-password").autocomplete = signup || reset ? "new-password" : "current-password";
+  if (emailLabel) emailLabel.style.display = reset ? "none" : "block";
+  document.getElementById("auth-email").required = !reset;
+  if (resetButton) resetButton.style.display = signin ? "inline-block" : "none";
+  if (resendButton) resendButton.style.display = signup ? "inline-block" : "none";
+  if (switchButton) switchButton.textContent = reset ? "Back to sign in" : signup ? "Already have an account? Sign in" : "Need an account? Create one";
 }
 
 async function submitAuth(event){
@@ -382,6 +407,14 @@ async function submitAuth(event){
 
   try {
     let result;
+
+    if (authMode === "reset") {
+      result = await supabaseClient.auth.updateUser({ password });
+      if (result.error) throw result.error;
+      message.textContent = "Password updated. You can now sign in.";
+      setTimeout(() => { authMode = "signin"; updateAuthForm(); }, 800);
+      return;
+    }
 
     if (authMode === "signup") {
       result = await supabaseClient.auth.signUp({ email, password, options: { emailRedirectTo: window.location.origin } });
@@ -416,6 +449,21 @@ async function submitAuth(event){
   }
 }
 
+async function requestPasswordReset(){
+  const email = document.getElementById("auth-email").value.trim();
+  const message = document.getElementById("auth-message");
+  if (!email) {
+    message.textContent = "Enter your email address first.";
+    return;
+  }
+  try {
+    const { error } = await supabaseClient.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin });
+    if (error) throw error;
+    message.textContent = "Password reset email sent. Check your inbox and spam folder.";
+  } catch (error) {
+    message.textContent = error.message || "Unable to send the reset email.";
+  }
+}
 async function resendConfirmation(){
   const email = document.getElementById("auth-email").value.trim();
   const message = document.getElementById("auth-message");
@@ -436,35 +484,53 @@ async function resendConfirmation(){
   }
 }
 
-async function fakeCheckout(){
+async function fakeCheckout(plan = "premium"){
   const { data } = await supabaseClient.auth.getSession();
   if (!data.session) {
     openAuth("signin", "premium");
     return;
   }
-
   try {
     const response = await fetch("/api/create-checkout", {
       method: "POST",
       headers: {
-        Authorization: "Bearer " + data.session.access_token
-      }
+        Authorization: "Bearer " + data.session.access_token,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ plan })
     });
-
     const result = await response.json();
-
-    if (!response.ok || !result.url) {
-      throw new Error(result.error || "Unable to start checkout.");
-    }
-
+    if (!response.ok || !result.url) throw new Error(result.error || "Unable to start checkout.");
     window.location.href = result.url;
   } catch (error) {
     showToast(error.message || "Unable to start checkout.");
   }
 }
 
+async function openCustomerPortal(){
+  const { data } = await supabaseClient.auth.getSession();
+  if (!data.session) {
+    openAuth("signin", "free");
+    return;
+  }
+  try {
+    const response = await fetch("/api/create-portal", {
+      method: "POST",
+      headers: { Authorization: "Bearer " + data.session.access_token }
+    });
+    const result = await response.json();
+    if (!response.ok || !result.url) throw new Error(result.error || "Unable to open subscription management.");
+    window.location.href = result.url;
+  } catch (error) {
+    showToast(error.message || "Unable to open subscription management.");
+  }
+}
 supabaseClient.auth.onAuthStateChange((event, session) => {
   console.log("SmartMeal auth:", event);
+  if (event === "PASSWORD_RECOVERY") {
+    openAuth("reset");
+    return;
+  }
   if (event === "SIGNED_IN" || event === "INITIAL_SESSION" || event === "SIGNED_OUT" || event === "TOKEN_REFRESHED") {
     setTimeout(refreshPremiumStatus, 0);
   }
