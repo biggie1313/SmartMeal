@@ -286,8 +286,8 @@ function scorePlannerMeal(meal,selected,remaining,target,budget,usedCounts,recen
   return score;
 }
 function chooseMealForSlot(type,selected,remaining,target,budget,usedCounts,recentMeals,diet,exclusions,optimizer,baseMeal){
-  let pool=healthyMealsByType[type].filter(meal=>isMealCompatible(meal.name,diet,exclusions));
-  if(baseMeal && mealFoodMap[baseMeal] && isMealCompatible(baseMeal,diet,exclusions)) pool=[{name:baseMeal,foods:mealFoodMap[baseMeal],cost:mealCostTier(baseMeal),tags:mealMetaMap[baseMeal]?.tags||[]},...pool];
+  let pool=healthyMealsByType[type].filter(meal=>!usedCounts[meal.name] && isMealCompatible(meal.name,diet,exclusions));
+  if(baseMeal && !usedCounts[baseMeal] && mealFoodMap[baseMeal] && isMealCompatible(baseMeal,diet,exclusions)) pool=[{name:baseMeal,foods:mealFoodMap[baseMeal],cost:mealCostTier(baseMeal),tags:mealMetaMap[baseMeal]?.tags||[]},...pool];
   const dedup=new Map(pool.map(meal=>[meal.name,meal]));
   pool=[...dedup.values()];
   pool.sort((a,b)=>{
