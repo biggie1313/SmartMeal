@@ -96,6 +96,8 @@ let dietaryExclusions = new Set();
 let currentGroceries=[];
 let preferredGroceries = new Set();
 let shoppingModeQuery="";
+let groceryPriceCity=localStorage.getItem("smartmeal:grocery-price-city") || "Winnipeg";
+let groceryPriceRows=[];
 
 const healthyMealLibrary=[
   {type:"breakfast",name:"Berry oatmeal bowl",foods:["Oats","Berries","Greek yogurt","Pumpkin seeds"],cost:1,tags:["fiber"]},
@@ -528,6 +530,7 @@ function renderCurrentWeekResult(){
   `;
   enhancePlannerControls();
   updateGroceryProgress();
+  loadGroceryPriceComparison();
 }
 
 function groceryBudgetStatus(estimate,budget){
@@ -781,6 +784,7 @@ function addRecipeIngredientsToGroceryList(meal){
     groceryArea.replaceWith(fresh.firstElementChild);
     enhancePlannerControls();
     document.querySelector("#result .grocery-area")?.scrollIntoView({behavior:"smooth",block:"start"});
+    loadGroceryPriceComparison();
   }
   showToast(added ? added+" recipe ingredient"+(added===1?"":"s")+" added to your grocery list." : "All recipe ingredients are already on your weekly grocery list.");
 }
@@ -1080,6 +1084,53 @@ function groceryChecks(){
 }
 
 function updateGroceryProgress(){const area=document.querySelector('#result .grocery-area');if(!area)return;const boxes=Array.from(area.querySelectorAll('input[data-grocery-name]'));const checked=boxes.filter(b=>b.checked).length;const total=boxes.length;const count=area.querySelector('.grocery-progress-count');const status=area.querySelector('.grocery-progress-status');if(count)count.textContent=checked+' / '+total+' checked';if(status)status.textContent=checked===total&&total?'Shopping list complete':Math.max(0,total-checked)+' item'+(Math.max(0,total-checked)===1?'':'s')+' left to shop';}
+const groceryPriceCities=["Winnipeg","Vancouver","Calgary","Edmonton","Saskatoon","Toronto","Ottawa","Montreal","Quebec City","Moncton","Halifax","Charlottetown","St. John's"];
+const groceryBannerNames={atlanticsuperstore:"Atlantic Superstore",dominion:"Dominion",farmboy:"Farm Boy",foodbasics:"Food Basics",foodland:"Foodland",fortinos:"Fortinos",freshco:"FreshCo",gianttiger:"Giant Tiger",iga:"IGA",loblaws:"Loblaws",maxi:"Maxi",metro:"Metro",nofrills:"No Frills",provigo:"Provigo",safeway:"Safeway",saveonfoods:"Save-On-Foods",sobeys:"Sobeys",superstore:"Real Canadian Superstore",thriftyfoods:"Thrifty Foods",voila:"Voila",wholesaleclub:"Wholesale Club",yourindependentgrocer:"Your Independent Grocer"};
+
+function groceryBannerLabel(value){
+  return groceryBannerNames[value] || value.replaceAll("_"," ").replace(/\b\w/g,c=>c.toUpperCase());
+}
+function renderGroceryPriceComparison(){
+  const box=document.getElementById("grocery-price-comparison");
+  if(!box) return;
+  const cityOptions=groceryPriceCities.map(city=>"<option value=\""+escapeHtml(city)+"\""+(city===groceryPriceCity?" selected":"")+">"+escapeHtml(city)+"</option>").join("");
+  const usable=groceryPriceRows.filter(row=>typeof row.basket_cost_cad==="number");
+  const sorted=[...usable].sort((a,b)=>a.basket_cost_cad-b.basket_cost_cad);
+  const rows=sorted.slice(0,6);
+  box.innerHTML="<div class=\"price-compare-head\"><div><strong>Live grocery market benchmark</strong><span>Latest published market-basket data for "+escapeHtml(groceryPriceCity)+".</span></div><div class=\"price-compare-controls\"><label>City<select id=\"grocery-price-city\" onchange=\"changeGroceryPriceCity(this.value)\">"+cityOptions+"</select></label><button type=\"button\" class=\"btn outline small\" onclick=\"loadGroceryPriceComparison()\">↻ Refresh</button></div></div>"+
+    (rows.length ? "<div class=\"price-compare-grid\">"+rows.map(row=>"<div class=\"price-store\"><div><strong>"+escapeHtml(groceryBannerLabel(row.retailer))+"</strong><small>Market basket benchmark</small></div><b>$"+Number(row.basket_cost_cad).toFixed(2)+"</b></div>").join("")+"</div><small class=\"price-source-note\">Benchmark only: this is GroceryPulse's overall market-basket cost, not the exact total of your SmartMeal cart. Data updates weekly.</small>" : "<div class=\"price-compare-empty\">No published store benchmark is available for this city right now.</div>");
+}
+async function loadGroceryPriceComparison(){
+  const box=document.getElementById("grocery-price-comparison");
+  if(!box) return;
+  groceryPriceRows=[];
+  box.innerHTML="<div class=\"price-loading\">Loading the latest grocery market benchmark…</div>";
+  try{
+    const url="https://grocerypulse.ca/api/public/index?level=banner&category=overall&city="+encodeURIComponent(groceryPriceCity)+"&limit=100";
+    const response=await fetch(url,{headers:{Accept:"application/json"},cache:"no-store"});
+    if(!response.ok) throw new Error("Price benchmark request failed.");
+    const payload=await response.json();
+    const observations=Array.isArray(payload.observations) ? payload.observations : [];
+    const latestByBanner=new Map();
+    observations.forEach(row=>{
+      if(!row?.retailer) return;
+      const prior=latestByBanner.get(row.retailer);
+      if(!prior || String(row.date)>String(prior.date)) latestByBanner.set(row.retailer,row);
+    });
+    groceryPriceRows=[...latestByBanner.values()].filter(row=>typeof row.basket_cost_cad==="number");
+    renderGroceryPriceComparison();
+  }catch(error){
+    console.error("SmartMeal grocery price comparison error:",error);
+    box.innerHTML="<div class=\"price-compare-empty\"><strong>Price benchmark unavailable right now.</strong><span>SmartMeal's grocery list is still available. Try Refresh again later.</span></div>";
+  }
+}
+function changeGroceryPriceCity(city){
+  if(!groceryPriceCities.includes(city)) return;
+  groceryPriceCity=city;
+  localStorage.setItem("smartmeal:grocery-price-city",city);
+  loadGroceryPriceComparison();
+}
+
 function openShoppingMode(){
   if(!currentGroceries.length){
     showToast("Generate a plan first.");
@@ -1284,6 +1335,7 @@ function renderGroceryList(list,people=Number(document.getElementById("people")?
     "<div class=\"grocery-header\"><div><strong>Your weekly shopping list</strong><span>"+items.length+" ingredients for "+people+" "+(people===1?"person":"people")+" · scaled from your 21 meals</span></div><span class=\"grocery-count\">"+people+" "+(people===1?"person":"people")+"</span></div>"+
     "<div class=\"grocery-budget-note\"><strong>Budget target:</strong> "+escapeHtml(groceryBudgetLabel(budget))+" · quantities are scaled to your household size. <span>These are planning estimates, not exact package sizes.</span></div>"+
     "<div class=\"grocery-budget-status "+budgetStatus.tone+"\"><div><strong>"+escapeHtml(budgetStatus.label)+"</strong><span>"+escapeHtml(budgetStatus.detail)+"</span></div><b>~$"+estimate.low+"–$"+estimate.high+"</b></div>"+
+    "<div id=\"grocery-price-comparison\" class=\"grocery-price-comparison\"><div class=\"price-loading\">Loading the latest grocery market benchmark…</div></div>"+
     "<div class=\"grocery-progress\"><div class=\"grocery-progress-top\"><span class=\"grocery-progress-status\">"+items.length+" items left to shop</span><span class=\"grocery-progress-count\">0 / "+items.length+" checked</span></div><div class=\"grocery-progress-bar\"><span></span></div></div>"+
     "<div class=\"grocery-filterbar\"><label><span>Find an item</span><input class=\"grocery-search\" type=\"search\" placeholder=\"Search chicken, rice, berries…\" oninput=\"filterGroceryList()\"></label><label><span>Category</span><select class=\"grocery-category-filter\" onchange=\"filterGroceryList()\"><option value=\"all\">All categories</option>"+categoryOptions+"</select></label></div>"+
     "<div class=\"grocery-actions\"><button type=\"button\" class=\"btn outline small\" onclick=\"openShoppingMode()\">🛒 Shopping mode</button><button type=\"button\" class=\"btn outline small\" onclick=\"checkAllVisibleGroceries()\">✓ Check visible</button><button type=\"button\" class=\"btn outline small\" onclick=\"clearCheckedGroceries()\">Clear checked</button><button type=\"button\" class=\"btn outline small\" onclick=\"copyGroceryList()\">Copy list</button><button type=\"button\" class=\"btn outline small\" onclick=\"printGroceryList()\">Print list</button></div>"+
@@ -1414,6 +1466,7 @@ function swapMeal(dayIndex, mealIndex){
     fresh.innerHTML = renderGroceryList(buildGroceryList(currentWeek, people, budget), people, budget);
     groceryArea.replaceWith(fresh.firstElementChild);
     enhancePlannerControls();
+    loadGroceryPriceComparison();
   }
 
   showToast("Swapped to " + next + ". Grocery list updated.");
