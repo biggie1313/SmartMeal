@@ -514,8 +514,63 @@ function showToast(message){
   }, 2800);
 }
 
+function recipeQuantity(food,people){
+  const meta=groceryMeta[food];
+  if(!meta) return "as needed";
+  const factor=meta.unit==="eggs" ? meta.perPerson*people : meta.perPerson*people;
+  return formatGroceryQuantity(factor,meta.unit);
+}
+
+function recipeSteps(meal,type){
+  const name=meal.toLowerCase();
+  if(name.includes("oatmeal") || name.includes("overnight oats") || name.includes("protein oats") || name.includes("chia"))
+    return ["Combine the oats and listed toppings with the liquid of your choice.","Cook gently on the stove until creamy, or refrigerate overnight for an overnight-oat version.","Add fruit, seeds, or nut butter just before serving."];
+  if(name.includes("egg") || name.includes("scramble") || name.includes("egg bowl"))
+    return ["Whisk the eggs and prepare the vegetables.","Cook the vegetables in a lightly oiled skillet until tender.","Add the eggs and gently stir until set. Serve with the listed toast or toppings."];
+  if(name.includes("yogurt"))
+    return ["Spoon the yogurt into serving bowls.","Layer in the fruit and listed seeds or nuts.","Serve chilled and add a small drizzle of nut butter or honey if desired."];
+  if(name.includes("wrap") || name.includes("taco") || name.includes("tortilla") || name.includes("quesadilla"))
+    return ["Warm the whole-grain tortilla in a dry skillet.","Prepare the filling by cooking the protein or warming the beans and vegetables.","Layer the filling with the listed vegetables or hummus, fold, and serve."];
+  if(name.includes("salad"))
+    return ["Wash and chop the vegetables.","Cook and cool the protein or grains if needed.","Toss everything with olive oil or your preferred simple dressing and serve."];
+  if(name.includes("bowl") || name.includes("rice") || name.includes("quinoa") || type==="dinner" || type==="lunch")
+    return ["Cook the grain or base according to its package directions.","Cook the protein and vegetables until fully done and tender.","Combine the cooked ingredients in bowls and finish with the listed toppings or olive oil."];
+  return ["Prepare the listed ingredients.","Cook the main ingredients until fully done.","Combine, season to taste, and serve."];
+}
+
+function recipeTypeLabel(type){
+  return type ? type.charAt(0).toUpperCase()+type.slice(1) : "Meal";
+}
+
+function openRecipe(meal){
+  const modal=document.getElementById("recipe-modal");
+  if(!modal) return;
+  const meta=mealMetaMap[meal] || {type:"meal",foods:ingredientsForMeal(meal),cost:2,tags:[]};
+  const people=Number(document.getElementById("people")?.value)||4;
+  const ingredients=(meta.foods||ingredientsForMeal(meal)).map(food=>{
+    const qty=recipeQuantity(food,people);
+    return "<li><span>"+escapeHtml(food)+"</span><strong>"+escapeHtml(qty)+"</strong></li>";
+  }).join("");
+  const directions=recipeSteps(meal,meta.type).map(step=>"<li>"+escapeHtml(step)+"</li>").join("");
+  const tagText=(meta.tags||[]).map(tag=>tag==="protein"?"higher protein":tag==="fiber"?"fiber-focused":tag==="lowercarb"?"lower carb":tag==="mediterranean"?"Mediterranean":"").filter(Boolean);
+  document.getElementById("recipe-type").textContent=recipeTypeLabel(meta.type);
+  document.getElementById("recipe-title").textContent=meal;
+  document.getElementById("recipe-meta").textContent=people+" "+(people===1?"serving":"servings")+(tagText.length ? " · "+tagText.join(" · ") : "");
+  document.getElementById("recipe-ingredients").innerHTML=ingredients;
+  document.getElementById("recipe-directions").innerHTML=directions;
+  modal.classList.add("open");
+  modal.setAttribute("aria-hidden","false");
+}
+
+function closeRecipe(){
+  const modal=document.getElementById("recipe-modal");
+  if(!modal) return;
+  modal.classList.remove("open");
+  modal.setAttribute("aria-hidden","true");
+}
+
 function selectMeal(meal){
-  showToast((isPremium ? "Premium meal selected: " : "Selected: ") + meal);
+  openRecipe(meal);
 }
 
 function handleCheckoutReturn(){
@@ -1527,6 +1582,13 @@ supabaseClient.auth.onAuthStateChange((event, session) => {
 document.addEventListener("DOMContentLoaded", () => {
   refreshPremiumStatus();
 
+  const recipeModal=document.getElementById("recipe-modal");
+  if(recipeModal){
+    recipeModal.addEventListener("click",(event)=>{
+      if(event.target.matches("[data-recipe-close]") || event.target===recipeModal) closeRecipe();
+    });
+  }
+  document.addEventListener("keydown",(event)=>{ if(event.key==="Escape") closeRecipe(); });
   const result = document.getElementById("result");
   if (!result) return;
 
