@@ -53,7 +53,16 @@
     <span class="pill">PREMIUM</span>
   </div>
   <div style="display:flex;gap:14px;flex-wrap:wrap;margin-top:14px">
-    <label style="min-width:180px">Nutrition target<select id="nutrition-target"><option value="balanced">Balanced</option><option value="highprotein">High protein</option><option value="lowercarb">Lower carb</option></select></label>
+    <label class="nutrition-control">Nutrition focus
+  <select id="nutrition-target">
+    <option value="balanced">Balanced</option>
+    <option value="highprotein">Higher protein</option>
+    <option value="lowercarb">Lower carb</option>
+    <option value="higherfiber">Higher fiber</option>
+    <option value="mediterranean">Mediterranean</option>
+  </select>
+  <small>Choose the main nutrition direction for this week's meals.</small>
+</label>
     <label style="display:flex;align-items:center;gap:8px;min-width:220px"><input id="reuse-optimizer" type="checkbox" checked> Optimize ingredient reuse</label>
     <button class="btn outline" type="button" onclick="saveCurrentPlan()">♡ Save this week</button><button class="btn outline" type="button" onclick="openCustomerPortal()">Manage subscription</button>
   </div>
