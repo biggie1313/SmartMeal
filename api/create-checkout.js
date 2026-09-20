@@ -36,16 +36,16 @@ module.exports = async function handler(req, res) {
 
     const requestedPlan = req.body && req.body.plan === "family" ? "family" : "premium";
     const prices = {
-      premium: "price_1UF4ZOJIwwNxJZyF12UqLgFB",
-      family: "price_1UHXoZJIwwNxJZyFi4d7VYmJ"
+      premium: process.env.STRIPE_PREMIUM_PRICE_ID || "price_1UF4ZOJIwwNxJZyF12UqLgFB",
+      family: process.env.STRIPE_FAMILY_PRICE_ID || "price_1UHXoZJIwwNxJZyFi4d7VYmJ"
     };
 
     const body = new URLSearchParams();
     body.set("mode", "subscription");
     body.set("line_items[0][price]", prices[requestedPlan]);
     body.set("line_items[0][quantity]", "1");
-    body.set("success_url", "https://smartmeal-commercial-mvp.vercel.app/?premium=success");
-    body.set("cancel_url", "https://smartmeal-commercial-mvp.vercel.app/?premium=cancel");
+    body.set("success_url", process.env.STRIPE_SUCCESS_URL || "https://smartmeal-commercial-mvp.vercel.app/?premium=success");
+    body.set("cancel_url", process.env.STRIPE_CANCEL_URL || "https://smartmeal-commercial-mvp.vercel.app/?premium=cancel");
     body.set("customer_email", user.email || "");
     body.set("metadata[user_id]", user.id);
     body.set("metadata[plan]", requestedPlan);
