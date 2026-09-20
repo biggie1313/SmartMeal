@@ -26,7 +26,15 @@ highprotein:[
 lowercarb:[
 ["Eggs + avocado","Chicken salad bowls"],["Greek yogurt + berries","Turkey lettuce tacos"],["Cottage cheese + fruit","Chicken pesto vegetables"],
 ["Eggs + spinach","Chicken stir-fry"],["Greek yogurt + nuts","Beef & broccoli bowls"],["Egg muffins + fruit","Chicken lettuce wraps"],["Eggs + berries","Leftover protein bowl"]
-]};
+],
+
+mediterranean:[
+["Greek yogurt + fruit","Lemon chicken bowls"],["Eggs + tomato toast","Turkey & hummus wraps"],["Oatmeal + berries","Greek chicken salad"],["Eggs + spinach","Mediterranean pasta"],["Yogurt + granola","Chickpea veggie bowls"],["Avocado toast + eggs","Herb chicken & potatoes"],["Fruit + yogurt","Leftover Mediterranean bowl"]
+],
+familyfriendly:[
+["Oatmeal + banana","Cheesy chicken rice bowls"],["Eggs + toast","Turkey tacos"],["Yogurt + berries","Chicken pasta"],["Pancakes + fruit","Chicken quesadillas"],["Eggs + toast","Mild beef & bean chili"],["French toast + banana","Chicken wraps"],["Yogurt + granola","Leftover family bowl"]
+]
+};
 const groceries=["Oats","Bananas","Eggs","Bread","Greek yogurt","Berries","Chicken breast","Rice","Tortillas","Ground turkey/beef","Beans","Pasta","Mixed vegetables","Carrots","Hummus","Apples","Peanut butter","Fruit","Granola","Cheese"];
 const substitutions={
   "Chicken rice bowls":["Turkey rice bowls","Tofu rice bowls","Chicken quinoa bowls"],
@@ -160,7 +168,7 @@ function generate(){
   const people=+document.getElementById("people").value;
   const budget=document.getElementById("budget").value;
   const diet=document.getElementById("diet").value;
-  const base={low:70,mid:95,high:130}[budget];
+  const base={tight:60,low:80,mid:105,high:140,premium:175}[budget];
   const cost=Math.round(base*people/4);
 
   const requestedTarget = document.getElementById("nutrition-target")?.value || "balanced";
@@ -700,8 +708,8 @@ async function loadSavedPlans(){
       const plan = item.plan || {};
       const created = item.created_at ? new Date(item.created_at).toLocaleString() : "Saved plan";
       const household = plan.household ? plan.household + " people" : "";
-      const diet = plan.diet === "vegetarian" ? "Vegetarian" : plan.diet === "highprotein" ? "High protein" : "Balanced";
-      const budget = plan.budget === "low" ? "$60–$80" : plan.budget === "high" ? "$110+" : "$80–$110";
+      const diet = plan.diet === "vegetarian" ? "Vegetarian" : plan.diet === "highprotein" ? "High protein" : plan.diet === "lowercarb" ? "Lower carb" : plan.diet === "mediterranean" ? "Mediterranean" : plan.diet === "familyfriendly" ? "Family-friendly" : "Balanced";
+      const budget = plan.budget === "tight" ? "$50–$70" : plan.budget === "low" ? "$70–$90" : plan.budget === "mid" ? "$90–$120" : plan.budget === "high" ? "$120–$160" : "$160+";
       return `
         <article class="saved-plan-card">
           <div class="saved-plan-top">
