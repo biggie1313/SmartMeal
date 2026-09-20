@@ -52,8 +52,12 @@
     <div><strong>Healthy foods you like</strong><p>Choose up to 12 foods. SmartMeal will use your picks to build 3 healthy meals a day for 7 days.</p></div>
     <div class="preference-count"><span id="preferred-grocery-count">0 / 12</span> selected</div>
   </div>
-  <div class="food-group">
-    <h4>Breakfast favorites</h4>
+  <div class="preference-toolbar">
+    <button class="btn outline small" type="button" id="select-all-foods">Select all (up to 12)</button>
+    <button class="text-link preference-clear" type="button" id="clear-preferred-groceries">Clear all foods</button>
+  </div>
+  <div class="food-group" data-food-group="breakfast">
+    <div class="food-group-head"><h4>Breakfast favorites</h4><button class="text-link" type="button" data-select-food-group="breakfast">Select all</button></div>
     <div id="grocery-preferences" class="grocery-preferences">
       <label><input type="checkbox" data-preferred-grocery="Oats"> Oats</label>
       <label><input type="checkbox" data-preferred-grocery="Bananas"> Bananas</label>
@@ -70,8 +74,8 @@
       <label><input type="checkbox" data-preferred-grocery="Pumpkin seeds"> Pumpkin seeds</label>
     </div>
   </div>
-  <div class="food-group">
-    <h4>Vegetables & produce</h4>
+  <div class="food-group" data-food-group="produce">
+    <div class="food-group-head"><h4>Vegetables & produce</h4><button class="text-link" type="button" data-select-food-group="produce">Select all</button></div>
     <div class="grocery-preferences">
       <label><input type="checkbox" data-preferred-grocery="Spinach"> Spinach</label>
       <label><input type="checkbox" data-preferred-grocery="Tomatoes"> Tomatoes</label>
@@ -82,8 +86,8 @@
       <label><input type="checkbox" data-preferred-grocery="Hummus"> Hummus</label>
     </div>
   </div>
-  <div class="food-group">
-    <h4>Protein & plant proteins</h4>
+  <div class="food-group" data-food-group="protein">
+    <div class="food-group-head"><h4>Protein & plant proteins</h4><button class="text-link" type="button" data-select-food-group="protein">Select all</button></div>
     <div class="grocery-preferences">
       <label><input type="checkbox" data-preferred-grocery="Chicken breast"> Chicken breast</label>
       <label><input type="checkbox" data-preferred-grocery="Turkey"> Turkey</label>
@@ -97,8 +101,8 @@
       <label><input type="checkbox" data-preferred-grocery="Beans"> Beans</label>
     </div>
   </div>
-  <div class="food-group">
-    <h4>Whole grains & healthy extras</h4>
+  <div class="food-group" data-food-group="grains">
+    <div class="food-group-head"><h4>Whole grains & healthy extras</h4><button class="text-link" type="button" data-select-food-group="grains">Select all</button></div>
     <div class="grocery-preferences">
       <label><input type="checkbox" data-preferred-grocery="Brown rice"> Brown rice</label>
       <label><input type="checkbox" data-preferred-grocery="Quinoa"> Quinoa</label>
@@ -106,7 +110,18 @@
       <label><input type="checkbox" data-preferred-grocery="Olive oil"> Olive oil</label>
     </div>
   </div>
-  <button class="text-link preference-clear" type="button" id="clear-preferred-groceries">Clear selections</button>
+  <div class="food-group exclusions-group">
+    <div class="food-group-head"><div><h4>Dietary exclusions</h4><p class="food-group-note">SmartMeal will avoid these in the generated week.</p></div><span class="preference-count"><span id="dietary-exclusion-count">0</span> selected</span></div>
+    <div id="dietary-exclusions" class="grocery-preferences exclusion-list">
+      <label><input type="checkbox" data-dietary-exclusion="Dairy"> Dairy</label>
+      <label><input type="checkbox" data-dietary-exclusion="Eggs"> Eggs</label>
+      <label><input type="checkbox" data-dietary-exclusion="Gluten"> Gluten</label>
+      <label><input type="checkbox" data-dietary-exclusion="Nuts"> Nuts</label>
+      <label><input type="checkbox" data-dietary-exclusion="Seafood"> Seafood</label>
+      <label><input type="checkbox" data-dietary-exclusion="Soy"> Soy</label>
+      <label><input type="checkbox" data-dietary-exclusion="Poultry"> Poultry</label>
+    </div>
+  </div>
 </div>
 <div id="premium-tools" class="premium-tools" style="display:none;margin:18px 0;padding:16px;border:1px solid #ddd;border-radius:14px">
   <div style="display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap">
@@ -233,5 +248,5 @@
   </div>
 </div>
 
-<script src="app.js?v=20260920-healthy-3-meals-v4"></script>
+<script src="app.js?v=20260920-healthy-3-meals-v5"></script>
 </body></html>
