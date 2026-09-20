@@ -198,7 +198,7 @@ async function saveCurrentPlan(){
     const user = sessionData?.session?.user;
 
     if (!user) {
-      openAuth("signin", plan);
+      openAuth("signin", "premium");
       return;
     }
 
@@ -488,15 +488,11 @@ async function loadFamilyMembers(){
   const list=document.getElementById("family-members-list");
   if(!list || !familyHousehold?.household_id) return;
   try{
-    const {data,error}=await supabaseClient
-      .from("household_members")
-      .select("user_id, role, joined_at")
-      .eq("household_id",familyHousehold.household_id)
-      .order("joined_at",{ascending:true});
+    const {data,error}=await supabaseClient.rpc("get_my_household_members");
     if(error) throw error;
-    list.innerHTML=(data||[]).map((member,index)=>{
+    list.innerHTML=(data||[]).map(member=>{
       const mine=member.user_id===currentUserId;
-      const label=mine ? "You" : "Family member " + (index+1);
+      const label=mine ? (member.email ? "You · " + member.email : "You") : (member.email || "Family member");
       return "<div class=\"family-member\"><span>"+escapeHtml(label)+"</span><small>"+escapeHtml(member.role==="owner" ? "Owner" : "Member")+"</small></div>";
     }).join("") || "<div class=\"saved-empty\">No members yet.</div>";
   }catch(error){
@@ -504,7 +500,6 @@ async function loadFamilyMembers(){
     list.innerHTML="<div class=\"saved-empty\">Unable to load members.</div>";
   }
 }
-
 async function loadFamilyPreferences(){
   if(!familyHousehold?.household_id) return;
   try{
@@ -523,6 +518,20 @@ async function loadFamilyPreferences(){
   }catch(error){
     console.error("SmartMeal family preferences error:",error);
   }
+}
+
+function useFamilyPreferences(){
+  if(!familyHousehold) return;
+  const diet=document.getElementById("family-diet")?.value || "balanced";
+  const map={balanced:"any",vegetarian:"vegetarian",highprotein:"highprotein",lowercarb:"any"};
+  const target= diet==="lowercarb" ? "lowercarb" : "balanced";
+  const dietControl=document.getElementById("diet");
+  const targetControl=document.getElementById("nutrition-target");
+  if(dietControl) dietControl.value=map[diet];
+  if(targetControl) targetControl.value=target;
+  document.getElementById("app")?.scrollIntoView({behavior:"smooth"});
+  setTimeout(generate,250);
+  showToast("Family preferences applied to your next plan.");
 }
 
 async function saveFamilyPreferences(){
@@ -562,6 +571,27 @@ async function loadFamilyGrocery(){
   }catch(error){
     console.error("SmartMeal family grocery error:",error);
     list.innerHTML="<div class=\"saved-empty\">Unable to load the shared list.</div>";
+  }
+}
+
+async function shareCurrentGroceries(){
+  if(!familyHousehold?.household_id || !currentWeek.length){
+    showToast("Create a family household and generate a plan first.");
+    return;
+  }
+  try{
+    const {data:sessionData}=await supabaseClient.auth.getSession();
+    const user=sessionData?.session?.user;
+    if(!user) throw new Error("Sign in required");
+    const {error}=await supabaseClient
+      .from("household_grocery_items")
+      .insert(groceries.map(item=>({household_id:familyHousehold.household_id,item,added_by:user.id})));
+    if(error) throw error;
+    await loadFamilyGrocery();
+    document.getElementById("family")?.scrollIntoView({behavior:"smooth"});
+    showToast("Your grocery list was added to the family list.");
+  }catch(error){
+    showToast(error.message || "Unable to share your grocery list.");
   }
 }
 
@@ -795,6 +825,7 @@ async function signOut(){
     updatePremiumUI();
     await loadSavedPlans();
     await loadFavorites();
+    await loadFamilyHousehold();
     showToast("You are signed out.");
     window.scrollTo({top: 0, behavior: "smooth"});
   } catch (error) {
