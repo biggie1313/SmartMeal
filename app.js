@@ -43,6 +43,118 @@ mediterranean:[
 };
 const groceryCatalog=["Oats","Bananas","Eggs","Bread","Greek yogurt","Berries","Chicken breast","Rice","Tortillas","Ground turkey/beef","Beans","Pasta","Mixed vegetables","Carrots","Hummus","Apples","Peanut butter","Fruit","Granola","Cheese","Chickpeas","Lentils","Tofu","Avocado","Spinach","Tomatoes","Potatoes","Cottage cheese","Shrimp","Tuna","Quinoa","Chia seeds","Black beans"];
 let currentGroceries=[];
+let preferredGroceries = new Set();
+
+const breakfastPreferenceMeals = [
+  "Oatmeal + banana","Oatmeal + berries","Overnight oats + chia","Eggs + toast","Eggs + avocado",
+  "Greek yogurt + berries","Yogurt + granola","Peanut butter banana toast","Apple cinnamon oatmeal",
+  "Cottage cheese + fruit","Protein oats","Pancakes + banana","French toast + banana","Avocado toast + eggs"
+];
+
+const dinnerPreferenceMeals = [
+  "Chicken rice bowls","Turkey tacos","Chicken pasta","Chicken stir-fry","Bean & beef chili","Chicken wraps",
+  "Chickpea rice bowls","Black bean tacos","Lentil pasta","Tofu stir-fry","Vegetarian chili","Chicken salad bowls",
+  "Turkey lettuce tacos","Chicken pesto vegetables","Lemon chicken bowls","Turkey & hummus wraps","Greek chicken salad",
+  "Mediterranean pasta","Chickpea veggie bowls","Herb chicken & potatoes","Cheesy chicken rice bowls",
+  "Chicken quesadillas","Mild beef & bean chili","Hummus veggie wraps","Beef & broccoli bowls","Chicken quinoa bowls",
+  "Tuna salad bowls","Shrimp stir-fry","Three-bean chili","Lentil chili","Chickpea wraps","Black bean rice bowls"
+];
+
+function preferredGroceriesStorageKey(){
+  return currentUserId ? "smartmeal:preferred-groceries:" + currentUserId : "smartmeal:preferred-groceries";
+}
+
+function loadPreferredGroceries(){
+  try{
+    preferredGroceries = new Set(JSON.parse(localStorage.getItem(preferredGroceriesStorageKey()) || "[]"));
+  }catch{
+    preferredGroceries = new Set();
+  }
+  document.querySelectorAll("[data-preferred-grocery]").forEach(box=>{
+    box.checked = preferredGroceries.has(box.dataset.preferredGrocery);
+  });
+  updatePreferredGroceryCount();
+}
+
+function selectedPreferredGroceries(){
+  return Array.from(document.querySelectorAll("[data-preferred-grocery]:checked")).map(box=>box.dataset.preferredGrocery);
+}
+
+function savePreferredGroceries(){
+  preferredGroceries = new Set(selectedPreferredGroceries());
+  localStorage.setItem(preferredGroceriesStorageKey(), JSON.stringify(Array.from(preferredGroceries)));
+  updatePreferredGroceryCount();
+}
+
+function updatePreferredGroceryCount(){
+  const count=document.getElementById("preferred-grocery-count");
+  if(count) count.textContent=selectedPreferredGroceries().length;
+}
+
+function scoreMealForPreferences(meal, selected){
+  const ingredients = ingredientsForMeal(meal);
+  let score = 0;
+  selected.forEach(item=>{
+    if(ingredients.includes(item)) score += 8;
+    const text = meal.toLowerCase();
+    const aliases = {
+      "ground turkey/beef":["turkey","beef"],
+      "mixed vegetables":["vegetable","veggie","stir-fry","broccoli"],
+      "chicken breast":["chicken"],
+      "greek yogurt":["yogurt"],
+      "peanut butter":["peanut butter"]
+    };
+    if((aliases[item] || [item.toLowerCase()]).some(alias=>text.includes(alias))) score += 3;
+  });
+  return score;
+}
+
+function isMealCompatible(meal, diet){
+  const text=meal.toLowerCase();
+  if(diet==="vegetarian" && /(chicken|turkey|beef|tuna|shrimp)/i.test(text)) return false;
+  return true;
+}
+
+function personalizeWeek(basePlan, diet, selected){
+  if(!selected.length) return basePlan.map(day=>[...day]);
+
+  const baseMeals = basePlan.flat();
+  const styleMeals = (plans[diet] || []).flat();
+  const pool = [...new Set([...baseMeals,...styleMeals,...breakfastPreferenceMeals,...dinnerPreferenceMeals])]
+    .filter(meal=>isMealCompatible(meal,diet));
+
+  const chosen=[];
+  const used=new Set();
+
+  for(let dayIndex=0; dayIndex<7; dayIndex++){
+    const baseDay=basePlan[dayIndex] || [];
+    const dayMeals=[];
+    for(let slot=0;slot<2;slot++){
+      const baseMeal=baseDay[slot];
+      const isBreakfast=slot===0;
+      const candidates=pool.filter(meal=>{
+        if(used.has(meal)) return false;
+        const breakfastLike=/oat|egg|yogurt|toast|pancake|fruit|granola|cottage|avocado|protein oats|french toast/i.test(meal);
+        return isBreakfast ? breakfastLike : !breakfastLike;
+      });
+      let best=baseMeal;
+      let bestScore=-Infinity;
+      candidates.forEach(meal=>{
+        let score=scoreMealForPreferences(meal,selected);
+        if(meal===baseMeal) score+=6;
+        if((plans[diet] || []).flat().includes(meal)) score+=4;
+        if(score>bestScore){bestScore=score;best=meal;}
+      });
+      dayMeals.push(best);
+      used.add(best);
+    }
+    chosen.push(dayMeals);
+  }
+
+  return chosen;
+}
+
+
 
 const groceryRules=[
   {pattern:/oatmeal|overnight oats|protein oats|oat/i,items:["Oats"]},
@@ -241,6 +353,29 @@ function generate(){
   const cost=Math.round(base*people/4);
 
   const requestedTarget = document.getElementById("nutrition-target")?.value || "balanced";
+  const preferredWrap = document.getElementById("grocery-preferences");
+  if (preferredWrap) {
+    preferredWrap.addEventListener("change", (event) => {
+      if (!event.target.matches("[data-preferred-grocery]")) return;
+      const checked = selectedPreferredGroceries();
+      if (checked.length > 8) {
+        event.target.checked = false;
+        showToast("Choose up to 8 foods you like.");
+        return;
+      }
+      savePreferredGroceries();
+    });
+  }
+
+  const clearPreferred = document.getElementById("clear-preferred-groceries");
+  if (clearPreferred) {
+    clearPreferred.addEventListener("click", () => {
+      document.querySelectorAll("[data-preferred-grocery]").forEach(box => { box.checked = false; });
+      savePreferredGroceries();
+      showToast("Food preferences cleared.");
+    });
+  }
+
   const optimizerCheckbox = document.getElementById("reuse-optimizer");
 
   let plan = plans[diet];
@@ -272,7 +407,8 @@ function generate(){
     targetNote += " · ingredient reuse optimized";
   }
 
-  currentWeek = plan.map(day => [...day]);
+  const selectedPreferences = selectedPreferredGroceries();
+  currentWeek = personalizeWeek(plan, diet, selectedPreferences);
   const days=["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
 
   document.getElementById("result").innerHTML=
@@ -310,6 +446,7 @@ async function saveCurrentPlan(){
       diet: document.getElementById("diet")?.value || null,
       nutrition_target: document.getElementById("nutrition-target")?.value || "balanced",
       ingredient_reuse_optimized: document.getElementById("reuse-optimizer")?.checked === true,
+      preferred_groceries: selectedPreferredGroceries(),
       meals: currentWeek.map(day => [...day]),
       html: result.innerHTML
     };
@@ -851,6 +988,14 @@ async function restoreSavedPlan(planId){
     currentWeek = plan.meals.map(day => [...day]);
     substitutionCursors = {};
   }
+  if (Array.isArray(plan.preferred_groceries)) {
+    preferredGroceries = new Set(plan.preferred_groceries);
+    localStorage.setItem(preferredGroceriesStorageKey(), JSON.stringify(plan.preferred_groceries));
+    document.querySelectorAll("[data-preferred-grocery]").forEach(box=>{
+      box.checked = preferredGroceries.has(box.dataset.preferredGrocery);
+    });
+    updatePreferredGroceryCount();
+  }
   result.innerHTML = plan.html || "";
   enhancePlannerControls();
   document.getElementById("app").scrollIntoView({behavior:"smooth"});
@@ -1163,6 +1308,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   handleCheckoutReturn();
+  loadPreferredGroceries();
 
   const favoriteList = document.getElementById("favorite-meals-list");
   if (favoriteList) {
