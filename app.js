@@ -635,6 +635,9 @@ function groceryChecks(){
   catch { return {}; }
 }
 
+function updateGroceryProgress(){const area=document.querySelector('#result .grocery-area');if(!area)return;const boxes=Array.from(area.querySelectorAll('input[data-grocery-name]'));const checked=boxes.filter(b=>b.checked).length;const total=boxes.length;const count=area.querySelector('.grocery-progress-count');const status=area.querySelector('.grocery-progress-status');if(count)count.textContent=checked+' / '+total+' checked';if(status)status.textContent=checked===total&&total?'Shopping list complete':Math.max(0,total-checked)+' item'+(Math.max(0,total-checked)===1?'':'s')+' left to shop';}
+function clearCheckedGroceries(){const checks=groceryChecks();document.querySelectorAll('#result input[data-grocery-name]').forEach(b=>{b.checked=false;checks[b.dataset.groceryName]=false;});localStorage.setItem(groceryStorageKey(),JSON.stringify(checks));updateGroceryProgress();showToast('Checked grocery items cleared.');}
+function printGroceryList(){const area=document.querySelector('#result .grocery-area');if(!area)return;const win=window.open('','_blank');if(!win){showToast('Please allow pop-ups to print the list.');return;}const copy=area.cloneNode(true);copy.querySelectorAll('.grocery-actions').forEach(e=>e.remove());win.document.write('<html><head><title>SmartMeal Grocery List</title></head><body style="font-family:Arial;padding:25px">'+copy.innerHTML+'</body></html>');win.document.close();win.focus();setTimeout(()=>win.print(),150);}
 function enhancePlannerControls(){
   const result = document.getElementById("result");
   if (!result) return;
