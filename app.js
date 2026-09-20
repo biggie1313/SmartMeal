@@ -1059,7 +1059,7 @@ function renderFavoriteMeals(){
     const button = document.createElement("button");
     button.type = "button";
     button.className = "favorite-chip";
-    button.dataset.open-favorite-meal = meal;
+    button.dataset.openFavoriteMeal = meal;
     button.textContent = "★ " + meal;
     list.appendChild(button);
   });
