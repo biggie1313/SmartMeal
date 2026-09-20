@@ -98,6 +98,7 @@ let preferredGroceries = new Set();
 let shoppingModeQuery="";
 let groceryPriceCity=localStorage.getItem("smartmeal:grocery-price-city") || "Winnipeg";
 let groceryPriceRows=[];
+let groceryItemPriceRows=[];
 
 const healthyMealLibrary=[
   {type:"breakfast",name:"Berry oatmeal bowl",foods:["Oats","Berries","Greek yogurt","Pumpkin seeds"],cost:1,tags:["fiber"]},
@@ -1094,17 +1095,52 @@ function renderGroceryPriceComparison(){
   const box=document.getElementById("grocery-price-comparison");
   if(!box) return;
   const cityOptions=groceryPriceCities.map(city=>"<option value=\""+escapeHtml(city)+"\""+(city===groceryPriceCity?" selected":"")+">"+escapeHtml(city)+"</option>").join("");
+
+  if(groceryItemPriceRows.length){
+    const matched=groceryItemPriceRows.filter(row=>row.matched && Array.isArray(row.prices) && row.prices.length);
+    const rows=matched.slice(0,12);
+    const extra=matched.length>rows.length ? "<small class=\"price-source-note\">Showing the first "+rows.length+" matched items here; the price service returned "+matched.length+" matched items.</small>" : "";
+    box.innerHTML="<div class=\"price-compare-head\"><div><strong>Item-level grocery prices</strong><span>Current published shelf-price observations for "+escapeHtml(groceryPriceCity)+".</span></div><div class=\"price-compare-controls\"><label>City<select id=\"grocery-price-city\" onchange=\"changeGroceryPriceCity(this.value)\">"+cityOptions+"</select></label><button type=\"button\" class=\"btn outline small\" onclick=\"loadGroceryPriceComparison()\">↻ Refresh</button></div></div>"+
+      (rows.length ? "<div class=\"item-price-list\">"+rows.map(row=>"<article class=\"item-price-row\"><div class=\"item-price-title\"><strong>"+escapeHtml(row.item)+"</strong><small>"+escapeHtml(row.matched_product||"Matched catalog item")+"</small></div><div class=\"item-price-stores\">"+row.prices.slice(0,3).map((price,index)=>"<div class=\"item-price-store"+(index===0?" lowest":"")+""><span>"+escapeHtml(price.retailer_name)+"</span><b>$"+Number(price.price).toFixed(2)+"</b>"+(price.on_sale?"<em>sale</em>":"")+"</div>").join("")+"</div></article>").join("")+"</div>"+extra+"<small class=\"price-source-note\">Price basis: GroceryPulse effective shelf price. Package sizes and stock can vary by retailer; compare like-for-like package sizes before buying. Walmart and Costco are not covered by this panel.</small>" : "<div class=\"price-compare-empty\">No item-level matches were returned for this week's groceries.</div>");
+    return;
+  }
+
   const usable=groceryPriceRows.filter(row=>typeof row.basket_cost_cad==="number");
   const sorted=[...usable].sort((a,b)=>a.basket_cost_cad-b.basket_cost_cad);
   const rows=sorted.slice(0,6);
-  box.innerHTML="<div class=\"price-compare-head\"><div><strong>Live grocery market benchmark</strong><span>Latest published market-basket data for "+escapeHtml(groceryPriceCity)+".</span></div><div class=\"price-compare-controls\"><label>City<select id=\"grocery-price-city\" onchange=\"changeGroceryPriceCity(this.value)\">"+cityOptions+"</select></label><button type=\"button\" class=\"btn outline small\" onclick=\"loadGroceryPriceComparison()\">↻ Refresh</button></div></div>"+
-    (rows.length ? "<div class=\"price-compare-grid\">"+rows.map(row=>"<div class=\"price-store\"><div><strong>"+escapeHtml(groceryBannerLabel(row.retailer))+"</strong><small>Market basket benchmark</small></div><b>$"+Number(row.basket_cost_cad).toFixed(2)+"</b></div>").join("")+"</div><small class=\"price-source-note\">Benchmark only: this is GroceryPulse's overall market-basket cost, not the exact total of your SmartMeal cart. Data updates weekly.</small>" : "<div class=\"price-compare-empty\">No published store benchmark is available for this city right now.</div>");
+  box.innerHTML="<div class=\"price-compare-head\"><div><strong>Grocery market benchmark</strong><span>Latest published market-basket data for "+escapeHtml(groceryPriceCity)+".</span></div><div class=\"price-compare-controls\"><label>City<select id=\"grocery-price-city\" onchange=\"changeGroceryPriceCity(this.value)\">"+cityOptions+"</select></label><button type=\"button\" class=\"btn outline small\" onclick=\"loadGroceryPriceComparison()\">↻ Refresh</button></div></div>"+
+    (rows.length ? "<div class=\"price-compare-grid\">"+rows.map(row=>"<div class=\"price-store\"><div><strong>"+escapeHtml(groceryBannerLabel(row.retailer))+"</strong><small>Market basket benchmark</small></div><b>$"+Number(row.basket_cost_cad).toFixed(2)+"</b></div>").join("")+"</div><small class=\"price-source-note\">Aggregate benchmark only: this is GroceryPulse's overall market-basket cost, not the exact total of your SmartMeal cart.</small>" : "<div class=\"price-compare-empty\"><strong>No market benchmark is available right now.</strong><span>SmartMeal's grocery list is still available.</span></div>");
 }
+
 async function loadGroceryPriceComparison(){
   const box=document.getElementById("grocery-price-comparison");
   if(!box) return;
+  groceryItemPriceRows=[];
   groceryPriceRows=[];
-  box.innerHTML="<div class=\"price-loading\">Loading the latest grocery market benchmark…</div>";
+  box.innerHTML="<div class=\"price-loading\">Loading current grocery prices…</div>";
+  try{
+    const {data:sessionData}=await supabaseClient.auth.getSession();
+    const token=sessionData?.session?.access_token;
+    const items=[...new Set((currentGroceries||[]).map(entry=>entry.item).filter(Boolean))].slice(0,24);
+    if(token && items.length){
+      const response=await fetch("/api/grocery-prices",{
+        method:"POST",
+        headers:{Authorization:"Bearer "+token,"Content-Type":"application/json"},
+        body:JSON.stringify({city:groceryPriceCity,items})
+      });
+      const payload=await response.json();
+      if(response.ok && Array.isArray(payload.results)){
+        groceryItemPriceRows=payload.results;
+        if(groceryItemPriceRows.some(row=>row.matched && row.prices?.length)){
+          renderGroceryPriceComparison();
+          return;
+        }
+      }
+    }
+  }catch(error){
+    console.error("SmartMeal item-level grocery price comparison error:",error);
+  }
+
   try{
     const url="https://grocerypulse.ca/api/public/index?level=banner&category=overall&city="+encodeURIComponent(groceryPriceCity)+"&limit=100";
     const response=await fetch(url,{headers:{Accept:"application/json"},cache:"no-store"});
@@ -1121,9 +1157,10 @@ async function loadGroceryPriceComparison(){
     renderGroceryPriceComparison();
   }catch(error){
     console.error("SmartMeal grocery price comparison error:",error);
-    box.innerHTML="<div class=\"price-compare-empty\"><strong>Price benchmark unavailable right now.</strong><span>SmartMeal's grocery list is still available. Try Refresh again later.</span></div>";
+    box.innerHTML="<div class=\"price-compare-empty\"><strong>Grocery price data is unavailable right now.</strong><span>SmartMeal's grocery list is still available. Try Refresh again later.</span></div>";
   }
 }
+
 function changeGroceryPriceCity(city){
   if(!groceryPriceCities.includes(city)) return;
   groceryPriceCity=city;
