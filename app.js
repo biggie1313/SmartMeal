@@ -534,21 +534,108 @@ function recipeQuantity(food,people){
   return formatGroceryQuantity(factor,meta.unit);
 }
 
+function recipeTiming(meal,type){
+  const name=meal.toLowerCase();
+  if(name.includes("overnight oats")) return {prep:5,cook:0,total:305};
+  if(name.includes("oatmeal") || name.includes("protein oats") || name.includes("chia")) return {prep:5,cook:10,total:15};
+  if(name.includes("yogurt") || name.includes("fruit")) return {prep:5,cook:0,total:5};
+  if(name.includes("salad")) return {prep:12,cook:10,total:22};
+  if(name.includes("wrap") || name.includes("taco") || name.includes("tortilla")) return {prep:10,cook:10,total:20};
+  if(name.includes("stew") || name.includes("chili")) return {prep:10,cook:30,total:40};
+  if(name.includes("egg") || name.includes("scramble")) return {prep:5,cook:10,total:15};
+  if(name.includes("stir-fry")) return {prep:10,cook:15,total:25};
+  if(name.includes("bowl") || name.includes("rice") || name.includes("quinoa") || type==="dinner" || type==="lunch") return {prep:10,cook:20,total:30};
+  return {prep:10,cook:15,total:25};
+}
+
 function recipeSteps(meal,type){
   const name=meal.toLowerCase();
-  if(name.includes("oatmeal") || name.includes("overnight oats") || name.includes("protein oats") || name.includes("chia"))
-    return ["Combine the oats and listed toppings with the liquid of your choice.","Cook gently on the stove until creamy, or refrigerate overnight for an overnight-oat version.","Add fruit, seeds, or nut butter just before serving."];
-  if(name.includes("egg") || name.includes("scramble") || name.includes("egg bowl"))
-    return ["Whisk the eggs and prepare the vegetables.","Cook the vegetables in a lightly oiled skillet until tender.","Add the eggs and gently stir until set. Serve with the listed toast or toppings."];
-  if(name.includes("yogurt"))
-    return ["Spoon the yogurt into serving bowls.","Layer in the fruit and listed seeds or nuts.","Serve chilled and add a small drizzle of nut butter or honey if desired."];
-  if(name.includes("wrap") || name.includes("taco") || name.includes("tortilla") || name.includes("quesadilla"))
-    return ["Warm the whole-grain tortilla in a dry skillet.","Prepare the filling by cooking the protein or warming the beans and vegetables.","Layer the filling with the listed vegetables or hummus, fold, and serve."];
+  if(name.includes("overnight oats"))
+    return [
+      "Add the oats and chia seeds to a jar or bowl. Stir in enough milk or yogurt to fully moisten the oats.",
+      "Fold in the fruit and any listed seeds or nuts.",
+      "Cover and refrigerate for at least 4 hours, preferably overnight.",
+      "Stir before serving and add a little more milk if needed.",
+      "Top with the remaining fruit or seeds and serve cold."
+    ];
+  if(name.includes("oatmeal") || name.includes("protein oats") || name.includes("chia"))
+    return [
+      "Add the oats to a saucepan with your preferred milk or water and bring to a gentle simmer.",
+      "Cook, stirring occasionally, until the oats are creamy and tender.",
+      "Stir in the listed fruit or nut butter.",
+      "Spoon into bowls and add the remaining seeds or toppings.",
+      "Serve warm and adjust sweetness or consistency to taste."
+    ];
+  if(name.includes("egg") || name.includes("scramble"))
+    return [
+      "Whisk the eggs with a pinch of salt and pepper while you chop the vegetables.",
+      "Heat a lightly oiled skillet over medium heat and cook the vegetables until tender.",
+      "Pour in the eggs and gently stir from the edges toward the center.",
+      "Cook until the eggs are just set, without drying them out.",
+      "Serve with the listed toast, avocado, or other toppings."
+    ];
+  if(name.includes("yogurt") || name.includes("fruit"))
+    return [
+      "Wash and prepare the fruit, then portion the yogurt into bowls.",
+      "Add the fruit evenly over the yogurt.",
+      "Sprinkle over the listed seeds, nuts, or granola.",
+      "Add a small drizzle of nut butter or honey only if desired.",
+      "Serve chilled."
+    ];
+  if(name.includes("wrap") || name.includes("taco") || name.includes("tortilla"))
+    return [
+      "Warm each tortilla briefly in a dry skillet so it is flexible.",
+      "Cook the listed protein, or warm the beans and vegetables, until hot and fully cooked.",
+      "Spread hummus or another listed base over the tortilla.",
+      "Add the filling and vegetables, keeping the center compact.",
+      "Fold tightly, slice if desired, and serve."
+    ];
   if(name.includes("salad"))
-    return ["Wash and chop the vegetables.","Cook and cool the protein or grains if needed.","Toss everything with olive oil or your preferred simple dressing and serve."];
+    return [
+      "Wash and chop the vegetables into bite-size pieces.",
+      "Cook any listed protein or grains until fully done, then cool slightly.",
+      "Add the cooked ingredients and greens to a large bowl.",
+      "Drizzle with olive oil and season with salt, pepper, and your preferred herbs or lemon.",
+      "Toss well and serve immediately."
+    ];
+  if(name.includes("stir-fry"))
+    return [
+      "Cut the vegetables and protein into small, even pieces.",
+      "Heat a large skillet or wok over medium-high heat with a little oil.",
+      "Cook the protein until fully done, then add the vegetables and stir-fry until crisp-tender.",
+      "Add a splash of water or a simple sauce and toss for another minute.",
+      "Serve over the listed rice or quinoa."
+    ];
+  if(name.includes("stew") || name.includes("chili"))
+    return [
+      "Chop the vegetables and gather the beans, lentils, or protein.",
+      "Cook the vegetables in a pot with a little olive oil until softened.",
+      "Add the remaining ingredients and enough liquid to create a thick stew.",
+      "Simmer gently until the vegetables and legumes are tender and the flavors come together.",
+      "Taste, season, and serve hot."
+    ];
   if(name.includes("bowl") || name.includes("rice") || name.includes("quinoa") || type==="dinner" || type==="lunch")
-    return ["Cook the grain or base according to its package directions.","Cook the protein and vegetables until fully done and tender.","Combine the cooked ingredients in bowls and finish with the listed toppings or olive oil."];
-  return ["Prepare the listed ingredients.","Cook the main ingredients until fully done.","Combine, season to taste, and serve."];
+    return [
+      "Cook the rice, quinoa, or other grain according to its package directions.",
+      "Season the listed protein and cook it until fully done.",
+      "Steam, roast, or sauté the vegetables until tender-crisp.",
+      "Divide the grain among bowls and arrange the protein and vegetables on top.",
+      "Finish with avocado, hummus, olive oil, or the other listed toppings and serve."
+    ];
+  return [
+    "Wash, chop, and measure the listed ingredients.",
+    "Cook the main protein and vegetables until fully done.",
+    "Combine the ingredients and season to taste.",
+    "Divide into the requested number of servings.",
+    "Serve immediately or refrigerate leftovers promptly."
+  ];
+}
+
+function formatRecipeMinutes(minutes){
+  if(minutes < 60) return minutes+" min";
+  const hours=Math.floor(minutes/60);
+  const mins=minutes%60;
+  return hours+(hours===1?" hr":" hrs")+(mins ? " "+mins+" min" : "");
 }
 
 function recipeTypeLabel(type){
@@ -560,6 +647,7 @@ function openRecipe(meal){
   if(!modal) return;
   const meta=mealMetaMap[meal] || {type:"meal",foods:ingredientsForMeal(meal),cost:2,tags:[]};
   const people=Number(document.getElementById("people")?.value)||4;
+  const timing=recipeTiming(meal,meta.type);
   const ingredients=(meta.foods||ingredientsForMeal(meal)).map(food=>{
     const qty=recipeQuantity(food,people);
     return "<li><span>"+escapeHtml(food)+"</span><strong>"+escapeHtml(qty)+"</strong></li>";
@@ -569,6 +657,12 @@ function openRecipe(meal){
   document.getElementById("recipe-type").textContent=recipeTypeLabel(meta.type);
   document.getElementById("recipe-title").textContent=meal;
   document.getElementById("recipe-meta").textContent=people+" "+(people===1?"serving":"servings")+(tagText.length ? " · "+tagText.join(" · ") : "");
+  const prep=document.getElementById("recipe-prep");
+  const cook=document.getElementById("recipe-cook");
+  const total=document.getElementById("recipe-total");
+  if(prep) prep.textContent=formatRecipeMinutes(timing.prep);
+  if(cook) cook.textContent=formatRecipeMinutes(timing.cook);
+  if(total) total.textContent=formatRecipeMinutes(timing.total);
   document.getElementById("recipe-ingredients").innerHTML=ingredients;
   document.getElementById("recipe-directions").innerHTML=directions;
   modal.classList.add("open");
