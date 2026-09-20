@@ -990,8 +990,75 @@ function groceryChecks(){
 }
 
 function updateGroceryProgress(){const area=document.querySelector('#result .grocery-area');if(!area)return;const boxes=Array.from(area.querySelectorAll('input[data-grocery-name]'));const checked=boxes.filter(b=>b.checked).length;const total=boxes.length;const count=area.querySelector('.grocery-progress-count');const status=area.querySelector('.grocery-progress-status');if(count)count.textContent=checked+' / '+total+' checked';if(status)status.textContent=checked===total&&total?'Shopping list complete':Math.max(0,total-checked)+' item'+(Math.max(0,total-checked)===1?'':'s')+' left to shop';}
-function clearCheckedGroceries(){const checks=groceryChecks();document.querySelectorAll('#result input[data-grocery-name]').forEach(b=>{b.checked=false;checks[b.dataset.groceryName]=false;});localStorage.setItem(groceryStorageKey(),JSON.stringify(checks));updateGroceryProgress();showToast('Checked grocery items cleared.');}
-function printGroceryList(){const area=document.querySelector('#result .grocery-area');if(!area)return;const win=window.open('','_blank');if(!win){showToast('Please allow pop-ups to print the list.');return;}const copy=area.cloneNode(true);copy.querySelectorAll('.grocery-actions').forEach(e=>e.remove());win.document.write('<html><head><title>SmartMeal Grocery List</title></head><body style="font-family:Arial;padding:25px">'+copy.innerHTML+'</body></html>');win.document.close();win.focus();setTimeout(()=>win.print(),150);}
+function clearCheckedGroceries(){
+  const checks=groceryChecks();
+  document.querySelectorAll('#result input[data-grocery-name]').forEach(b=>{b.checked=false;checks[b.dataset.groceryName]=false;});
+  localStorage.setItem(groceryStorageKey(),JSON.stringify(checks));
+  updateGroceryProgress();
+  showToast('Checked grocery items cleared.');
+}
+function filterGroceryList(){
+  const area=document.querySelector('#result .grocery-area');
+  if(!area) return;
+  const query=(area.querySelector('.grocery-search')?.value || '').trim().toLowerCase();
+  const category=area.querySelector('.grocery-category-filter')?.value || 'all';
+  let visible=0;
+  area.querySelectorAll('.grocery-category').forEach(section=>{
+    const matchesCategory=category==='all' || section.dataset.category===category;
+    let sectionVisible=0;
+    section.querySelectorAll('.gitem').forEach(item=>{
+      const matchesSearch=!query || item.dataset.groceryName.toLowerCase().includes(query);
+      const show=matchesCategory && matchesSearch;
+      item.style.display=show ? '' : 'flex';
+      if(!show) item.style.display='none';
+      if(show){visible++;sectionVisible++;}
+    });
+    section.style.display=sectionVisible ? '' : 'none';
+  });
+  const empty=area.querySelector('.grocery-filter-empty');
+  if(empty) empty.style.display=visible ? 'none' : 'block';
+}
+function checkAllVisibleGroceries(){
+  const area=document.querySelector('#result .grocery-area');
+  if(!area) return;
+  const checks=groceryChecks();
+  area.querySelectorAll('.gitem').forEach(item=>{
+    if(item.style.display==='none') return;
+    const box=item.querySelector('input[data-grocery-name]');
+    if(box){box.checked=true;checks[box.dataset.groceryName]=true;}
+  });
+  localStorage.setItem(groceryStorageKey(),JSON.stringify(checks));
+  updateGroceryProgress();
+  showToast('Visible grocery items marked as checked.');
+}
+async function copyGroceryList(){
+  const area=document.querySelector('#result .grocery-area');
+  if(!area) return;
+  const lines=[];
+  area.querySelectorAll('.gitem').forEach(item=>{
+    if(item.style.display==='none') return;
+    const name=item.querySelector('.grocery-name')?.textContent?.trim() || '';
+    const qty=item.querySelector('.grocery-qty')?.textContent?.trim() || '';
+    if(name) lines.push((item.querySelector('input')?.checked ? '✓ ' : '□ ')+name+(qty ? ' — '+qty : ''));
+  });
+  if(!lines.length){showToast('No visible grocery items to copy.');return;}
+  try{
+    await navigator.clipboard.writeText('SmartMeal Grocery List\n\n'+lines.join('\n'));
+    showToast('Grocery list copied to your clipboard.');
+  }catch{
+    showToast('Copy failed. Use Print list instead.');
+  }
+}
+function printGroceryList(){
+  const area=document.querySelector('#result .grocery-area');
+  if(!area)return;
+  const win=window.open('','_blank');
+  if(!win){showToast('Please allow pop-ups to print the list.');return;}
+  const copy=area.cloneNode(true);
+  copy.querySelectorAll('.grocery-actions,.grocery-filterbar,.grocery-filter-empty').forEach(e=>e.remove());
+  win.document.write('<html><head><title>SmartMeal Grocery List</title></head><body style="font-family:Arial;padding:25px">'+copy.innerHTML+'</body></html>');
+  win.document.close();win.focus();setTimeout(()=>win.print(),150);
+}
 function enhancePlannerControls(){
   const result = document.getElementById("result");
   if (!result) return;
@@ -1049,8 +1116,9 @@ function renderGroceryList(list,people=Number(document.getElementById("people")?
   if(!items.length) return "<div class=\"grocery-empty\">No grocery items found for this week yet.</div>";
   const checked=groceryChecks();
   const categories=groceryCategories(items);
+  const categoryOptions=categories.map(([category])=>"<option value=\""+escapeHtml(category)+"\">"+escapeHtml(category)+"</option>").join("");
   const categoryHtml=categories.map(([category,entries])=>{
-    return "<section class=\"grocery-category\"><div class=\"grocery-category-head\"><h4>"+escapeHtml(category)+"</h4><span>"+entries.length+" item"+(entries.length===1?"":"s")+"</span></div><div class=\"groceries\">"+
+    return "<section class=\"grocery-category\" data-category=\""+escapeHtml(category)+"\"><div class=\"grocery-category-head\"><h4>"+escapeHtml(category)+"</h4><span>"+entries.length+" item"+(entries.length===1?"":"s")+"</span></div><div class=\"groceries\">"+
       entries.map(entry=>"<div class=\"gitem\" data-grocery-name=\""+escapeHtml(entry.item)+"\"><input type=\"checkbox\" data-grocery-name=\""+escapeHtml(entry.item)+"\""+(checked[entry.item]===true?" checked":"")+" onchange=\"updateGroceryProgress()\"><div class=\"grocery-copy\"><div class=\"grocery-name-row\"><span class=\"grocery-name\">"+escapeHtml(entry.item)+"</span><strong class=\"grocery-qty\">"+escapeHtml(entry.quantity)+"</strong></div><small>Used in "+entry.meals.length+" meal"+(entry.meals.length===1?"":"s")+": "+escapeHtml(entry.meals.slice(0,3).join(" · "))+(entry.meals.length>3?" · +"+(entry.meals.length-3)+" more":"")+"</small></div></div>").join("")+
       "</div></section>";
   }).join("");
@@ -1059,7 +1127,9 @@ function renderGroceryList(list,people=Number(document.getElementById("people")?
     "<div class=\"grocery-header\"><div><strong>Your weekly shopping list</strong><span>"+items.length+" ingredients for "+people+" "+(people===1?"person":"people")+" · scaled from your 21 meals</span></div><span class=\"grocery-count\">"+people+" "+(people===1?"person":"people")+"</span></div>"+
     "<div class=\"grocery-budget-note\"><strong>Budget target:</strong> "+escapeHtml(groceryBudgetLabel(budget))+" · quantities are scaled to your household size. <span>These are planning estimates, not exact package sizes.</span></div>"+
     "<div class=\"grocery-progress\"><div class=\"grocery-progress-top\"><span class=\"grocery-progress-status\">"+items.length+" items left to shop</span><span class=\"grocery-progress-count\">0 / "+items.length+" checked</span></div><div class=\"grocery-progress-bar\"><span></span></div></div>"+
-    "<div class=\"grocery-actions\"><button type=\"button\" class=\"btn outline small\" onclick=\"clearCheckedGroceries()\">Clear checked</button><button type=\"button\" class=\"btn outline small\" onclick=\"printGroceryList()\">Print list</button></div>"+
+    "<div class=\"grocery-filterbar\"><label><span>Find an item</span><input class=\"grocery-search\" type=\"search\" placeholder=\"Search chicken, rice, berries…\" oninput=\"filterGroceryList()\"></label><label><span>Category</span><select class=\"grocery-category-filter\" onchange=\"filterGroceryList()\"><option value=\"all\">All categories</option>"+categoryOptions+"</select></label></div>"+
+    "<div class=\"grocery-actions\"><button type=\"button\" class=\"btn outline small\" onclick=\"checkAllVisibleGroceries()\">✓ Check visible</button><button type=\"button\" class=\"btn outline small\" onclick=\"clearCheckedGroceries()\">Clear checked</button><button type=\"button\" class=\"btn outline small\" onclick=\"copyGroceryList()\">Copy list</button><button type=\"button\" class=\"btn outline small\" onclick=\"printGroceryList()\">Print list</button></div>"+
+    "<div class=\"grocery-filter-empty\" style=\"display:none\">No grocery items match that search.</div>"+
     categoryHtml+
     "</div>";
 }
