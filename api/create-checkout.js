@@ -34,7 +34,11 @@ module.exports = async function handler(req, res) {
 
     const user = await userResponse.json();
 
-    const requestedPlan = req.body && req.body.plan === "family" ? "family" : "premium";
+    const requestedPlan = req.body?.plan || "premium";
+    if (requestedPlan !== "premium" && requestedPlan !== "family") {
+      return res.status(400).json({ error: "Invalid subscription plan" });
+    }
+
     const prices = {
       premium: process.env.STRIPE_PREMIUM_PRICE_ID || "price_1UF4ZOJIwwNxJZyF12UqLgFB",
       family: process.env.STRIPE_FAMILY_PRICE_ID || "price_1UHXoZJIwwNxJZyFi4d7VYmJ"
