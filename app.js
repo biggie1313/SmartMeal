@@ -486,22 +486,35 @@ function groceryCategories(items){
   return Array.from(groups.entries()).filter(([,entries])=>entries.length);
 }
 
-const substitutions={
-  "Chicken rice bowls":["Turkey rice bowls","Tofu rice bowls","Chicken quinoa bowls"],
-  "Turkey tacos":["Chicken tacos","Black bean tacos","Turkey lettuce tacos"],
-  "Chicken pasta":["Turkey pasta","Chickpea pasta","Chicken pesto pasta"],
-  "Chicken stir-fry":["Turkey stir-fry","Tofu stir-fry","Shrimp stir-fry"],
-  "Bean & beef chili":["Turkey chili","Three-bean chili","Lentil chili"],
-  "Chicken wraps":["Turkey wraps","Hummus veggie wraps","Tuna wraps"],
-  "Chickpea rice bowls":["Black bean rice bowls","Tofu rice bowls","Lentil rice bowls"],
-  "Black bean tacos":["Lentil tacos","Chicken tacos","Tofu tacos"],
-  "Lentil pasta":["Chickpea pasta","Turkey pasta","Tomato basil pasta"],
-  "Tofu stir-fry":["Chickpea stir-fry","Chicken stir-fry","Turkey stir-fry"],
-  "Vegetarian chili":["Three-bean chili","Lentil chili","Chickpea chili"],
-  "Chicken salad bowls":["Turkey salad bowls","Tofu salad bowls","Tuna salad bowls"],
-  "Turkey lettuce tacos":["Chicken lettuce tacos","Black bean lettuce tacos","Turkey taco salad"],
-  "Chicken pesto vegetables":["Turkey pesto vegetables","Tofu pesto vegetables","Chicken salad"]
-};
+function getSwapOptions(meal, dayIndex, mealIndex){
+  const meta = mealMetaMap[meal];
+  const type = meta?.type;
+  if(!type) return [];
+  
+  const exclusions = selectedDietaryExclusions();
+  const selectedFoods = selectedPreferredGroceries();
+  const target = document.getElementById("nutrition-target")?.value || "balanced";
+  const budget = document.getElementById("budget")?.value || "mid";
+  const reuseEnabled = isPremium && document.getElementById("reuse-optimizer")?.checked === true;
+  const currentMeals = currentWeek.flat().filter(name => name && name !== meal);
+  
+  const candidates = (healthyMealsByType[type] || [])
+    .filter(candidate => candidate.name !== meal)
+    .filter(candidate => !isMealExcluded(candidate.name, exclusions));
+  
+  const score = candidate => {
+    const foods = mealFoodMap[candidate.name] || [];
+    const preferenceHits = selectedFoods.filter(food => foods.includes(food)).length;
+    const targetHit = target !== "balanced" && (mealMetaMap[candidate.name]?.tags || []).includes(target) ? 1 : 0;
+    const usedThisWeek = currentMeals.includes(candidate.name);
+    const overlap = reuseEnabled ? foods.filter(food => (mealFoodMap[meal] || []).includes(food)).length : 0;
+    const costTarget = {tight:1,low:1,mid:2,high:2,premium:3}[budget] || 2;
+    const costFit = Math.max(0, 2 - Math.abs((candidate.cost || 2) - costTarget));
+    return preferenceHits * 7 + targetHit * 4 + overlap * 2 + costFit - (usedThisWeek ? 6 : 0);
+  };
+  
+  return candidates.sort((a,b) => score(b) - score(a)).map(candidate => candidate.name).slice(0,6);
+}
 
 function showToast(message){
   const toast = document.getElementById("toast");
@@ -925,7 +938,13 @@ function swapMeal(dayIndex, mealIndex){
   if (!requirePremium("Meal substitutions")) return;
   const meal = currentWeek?.[dayIndex]?.[mealIndex];
   if (!meal) return;
-  const options = substitutions[meal] || ["Chicken bowl","Turkey bowl","Vegetable bowl"];
+  
+  const options = getSwapOptions(meal, dayIndex, mealIndex);
+  if (!options.length) {
+    showToast("No compatible replacement meals were found for this slot.");
+    return;
+  }
+
   const key = dayIndex + ":" + mealIndex;
   const cursor = substitutionCursors[key] || 0;
   const next = options[cursor % options.length];
@@ -940,9 +959,23 @@ function swapMeal(dayIndex, mealIndex){
     button.dataset.meal = next;
     button.textContent = next + (isPremium ? " ☆" : "");
     const favorite = button.parentElement?.querySelector(".meal-favorite");
-    if (favorite) { favorite.dataset.favoriteMeal = next; favorite.textContent = favoriteMeals.has(next) ? "★" : "☆"; }
+    if (favorite) {
+      favorite.dataset.favoriteMeal = next;
+      favorite.textContent = favoriteMeals.has(next) ? "★" : "☆";
+    }
   }
-  const people=Number(document.getElementById("people")?.value)||4; const budget=document.getElementById("budget")?.value||"mid"; const groceryArea=document.querySelector("#result .grocery-area"); if(groceryArea){ const fresh=document.createElement("div"); fresh.innerHTML=renderGroceryList(buildGroceryList(currentWeek,people,budget),people,budget); groceryArea.replaceWith(fresh.firstElementChild); enhancePlannerControls(); } showToast("Meal swapped to " + next + ". Grocery list updated.");
+
+  const people = Number(document.getElementById("people")?.value) || 4;
+  const budget = document.getElementById("budget")?.value || "mid";
+  const groceryArea = document.querySelector("#result .grocery-area");
+  if (groceryArea) {
+    const fresh = document.createElement("div");
+    fresh.innerHTML = renderGroceryList(buildGroceryList(currentWeek, people, budget), people, budget);
+    groceryArea.replaceWith(fresh.firstElementChild);
+    enhancePlannerControls();
+  }
+
+  showToast("Swapped to " + next + ". Grocery list updated.");
 }
 
 
