@@ -442,14 +442,94 @@ function groceryBudgetLabel(budget){
 }
 
 function estimateWeeklySpend(week,people=4){
-  const perPersonMealCost={1:4,2:6,3:8};
+  const perMealPerPerson={1:1.55,2:2.05,3:2.75};
   const total=week.flat().reduce((sum,meal)=>{
     const tier=mealMetaMap[meal]?.cost || 2;
-    return sum + (perPersonMealCost[tier] || 6);
+    return sum + (perMealPerPerson[tier] || 2.05);
   },0)*Number(people||4);
   const rounded=Math.round(total/5)*5;
-  return {low:Math.max(25,Math.round(rounded*0.85/5)*5),high:Math.round(rounded*1.15/5)*5};
+  return {low:Math.max(35,Math.round(rounded*0.90/5)*5),high:Math.max(45,Math.round(rounded*1.10/5)*5)};
 }
+function optimizeWeekForBudget(){
+  if(!currentWeek.length){showToast("Generate a plan first.");return;}
+  const people=Number(document.getElementById("people")?.value)||4;
+  const budget=document.getElementById("budget")?.value||"mid";
+  const cap={tight:70,low:90,mid:120,high:160,premium:9999}[budget]||120;
+  let estimate=estimateWeeklySpend(currentWeek,people);
+  if(estimate.high<=cap){showToast("Your week is already within the selected budget.");return;}
+  
+  const diet=document.getElementById("diet")?.value||"any";
+  const exclusions=selectedDietaryExclusions();
+  const selectedFoods=selectedPreferredGroceries();
+  const target=targetTagForPlan(document.getElementById("nutrition-target")?.value||"balanced");
+  const optimizer=isPremium && document.getElementById("reuse-optimizer")?.checked===true;
+  
+  for(let pass=0;pass<3 && estimate.high>cap;pass++){
+    let best=null;
+    currentWeek.forEach((day,dayIndex)=>{
+      day.forEach((meal,mealIndex)=>{
+        const meta=mealMetaMap[meal];
+        if(!meta) return;
+        const candidates=healthyMealsByType[meta.type||["breakfast","lunch","dinner"][mealIndex]]
+          .filter(candidate=>candidate.name!==meal)
+          .filter(candidate=>!isMealExcluded(candidate.name,exclusions))
+          .filter(candidate=>!currentWeek.flat().includes(candidate.name))
+          .filter(candidate=>(candidate.cost||2)<(meta.cost||2));
+        candidates.forEach(candidate=>{
+          const pref=selectedFoods.filter(food=>(candidate.foods||[]).includes(food)).length;
+          const targetHit=target && (candidate.tags||[]).includes(target) ? 1 : 0;
+          const reuse=optimizer ? (candidate.foods||[]).filter(food=>(meta.foods||[]).includes(food)).length : 0;
+          const savings=(meta.cost||2)-(candidate.cost||2);
+          const score=savings*30+pref*18+targetHit*10+reuse*4;
+          if(!best||score>best.score) best={dayIndex,mealIndex,candidate,score};
+        });
+      });
+    });
+    if(!best) break;
+    currentWeek[best.dayIndex][best.mealIndex]=best.candidate.name;
+    estimate=estimateWeeklySpend(currentWeek,people);
+  }
+  
+  renderCurrentWeekResult();
+  showToast(estimate.high<=cap ? "Your week was adjusted toward the selected budget." : "SmartMeal made the lowest-cost compatible swaps it could find.");
+}
+function renderCurrentWeekResult(){
+  const result=document.getElementById("result");
+  if(!result || !currentWeek.length) return;
+  const people=Number(document.getElementById("people")?.value)||4;
+  const budget=document.getElementById("budget")?.value||"mid";
+  const diet=document.getElementById("diet")?.value||"any";
+  const requestedTarget=document.getElementById("nutrition-target")?.value||"balanced";
+  const targetNote=requestedTarget==="balanced" ? "" : " · "+({
+    highprotein:"higher protein",lowercarb:"lower carb",higherfiber:"higher fiber",mediterranean:"Mediterranean"
+  }[requestedTarget]||"");
+  const selectedPreferences=selectedPreferredGroceries();
+  const selectedExclusions=selectedDietaryExclusions();
+  const covered=selectedPreferences.filter(food=>currentWeek.flat().some(meal=>mealUsesPreference(meal,food)));
+  const coveredText=selectedPreferences.length || selectedExclusions.length
+    ? `<div class="preference-summary">${selectedPreferences.length ? "<strong>Built around your foods:</strong> "+escapeHtml(covered.join(", "))+" <span>· "+covered.length+"/"+selectedPreferences.length+" selected foods used</span>" : ""}${selectedExclusions.length ? "<small class="preference-exclusions"><strong>Avoiding:</strong> "+escapeHtml(selectedExclusions.join(", "))+"</small>" : ""}</div>`
+    : `<div class="preference-summary muted">Choose healthy foods above and SmartMeal will build your 7-day plan around them.</div>`;
+  const estimate=estimateWeeklySpend(currentWeek,people);
+  const budgetStatus=groceryBudgetStatus(estimate,budget);
+  const mealTypes=["Breakfast","Lunch","Dinner"];
+  const days=["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
+  const action=budgetStatus.tone==="over" ? `<button type="button" class="btn small" onclick="optimizeWeekForBudget()">↘ Make this week cheaper</button>` : "";
+  result.innerHTML=`
+    <h3>Your personalized 7-day week <span style="color:#2e7d50">· 21 meals</span><small>3 meals per day · about ${escapeHtml(
+      requestedTarget==="balanced" ? "" : targetNote
+    )}</small></h3>
+    ${coveredText}
+    <div class="week">${currentWeek.map((d,i)=>
+      `<div class="day"><b>${days[i]}</b>${d.map((m,slot)=>
+        `<div class="meal-slot"><span class="meal-type">${mealTypes[slot]}</span><button type="button" class="meal" data-meal="${escapeHtml(m)}">${escapeHtml(m)}${isPremium ? " ☆" : ""}</button></div>`
+      ).join("")}</div>`).join("")}</div>
+    ${renderGroceryList(buildGroceryList(currentWeek,people,budget),people,budget)}
+    ${action ? `<div class="budget-action-note">${action}<span>SmartMeal will keep your food preferences and exclusions where possible.</span></div>` : ""}
+  `;
+  enhancePlannerControls();
+  updateGroceryProgress();
+}
+
 function groceryBudgetStatus(estimate,budget){
   const caps={tight:70,low:90,mid:120,high:160,premium:9999};
   const cap=caps[budget] || 120;
@@ -942,15 +1022,7 @@ function generate(){
   const coveredText=selectedPreferences.length || selectedExclusions.length
     ? `<div class="preference-summary">${selectedPreferences.length ? `<strong>Built around your foods:</strong> ${escapeHtml(covered.join(", "))} <span>· ${covered.length}/${selectedPreferences.length} selected foods used</span>` : ""}${selectedExclusions.length ? `<small class="preference-exclusions"><strong>Avoiding:</strong> ${escapeHtml(selectedExclusions.join(", "))}</small>` : ""}</div>`
     : `<div class="preference-summary muted">Choose healthy foods above and SmartMeal will build your 7-day plan around them.</div>`;
-  document.getElementById("result").innerHTML=
-    `<h3>Your personalized 7-day week <span style="color:#2e7d50">· 21 meals</span><small>3 meals per day · about ${cost}${escapeHtml(targetNote)}</small></h3>
-    ${coveredText}
-    <div class="week">${currentWeek.map((d,i)=>
-      `<div class="day"><b>${days[i]}</b>${d.map((m,slot)=>
-        `<div class="meal-slot"><span class="meal-type">${mealTypes[slot]}</span><button type="button" class="meal" data-meal="${escapeHtml(m)}">${escapeHtml(m)}${isPremium ? " ☆" : ""}</button></div>`
-      ).join("")}</div>`).join("")}</div>
-    ${renderGroceryList(buildGroceryList(currentWeek,people,budget),people,budget)}`;
-  enhancePlannerControls();
+  renderCurrentWeekResult();
 }
 async function saveCurrentPlan(){
   if (!requirePremium("Saving plans")) return;
