@@ -442,8 +442,10 @@ function groceryBudgetLabel(budget){
 
 function formatGroceryQuantity(value,unit){
   const rounded=Math.round(value*10)/10;
-  const shown=Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(1);
-  return shown+" "+unit;
+  const clean=Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(1);
+  if(unit==="tbsp" && rounded>=16) return (Math.round(rounded/16*10)/10)+" cups";
+  if(unit==="oz" && rounded>=16) return (Math.round(rounded/16*10)/10)+" lb";
+  return clean+" "+unit;
 }
 
 function buildGroceryList(week,people=4,budget="mid"){
@@ -777,7 +779,7 @@ function renderGroceryList(list,people=Number(document.getElementById("people")?
 
   return "<div class=\"grocery-area\">"+
     "<div class=\"grocery-header\"><div><strong>Your weekly shopping list</strong><span>"+items.length+" ingredients for "+people+" "+(people===1?"person":"people")+" · scaled from your 21 meals</span></div><span class=\"grocery-count\">"+people+" "+(people===1?"person":"people")+"</span></div>"+
-    "<div class=\"grocery-budget-note\"><strong>Budget target:</strong> "+escapeHtml(groceryBudgetLabel(budget))+" · quantities are scaled to your household size.</div>"+
+    "<div class=\"grocery-budget-note\"><strong>Budget target:</strong> "+escapeHtml(groceryBudgetLabel(budget))+" · quantities are scaled to your household size. <span>These are planning estimates, not exact package sizes.</span></div>"+
     "<div class=\"grocery-progress\"><div class=\"grocery-progress-top\"><span class=\"grocery-progress-status\">"+items.length+" items left to shop</span><span class=\"grocery-progress-count\">0 / "+items.length+" checked</span></div><div class=\"grocery-progress-bar\"><span></span></div></div>"+
     "<div class=\"grocery-actions\"><button type=\"button\" class=\"btn outline small\" onclick=\"clearCheckedGroceries()\">Clear checked</button><button type=\"button\" class=\"btn outline small\" onclick=\"printGroceryList()\">Print list</button></div>"+
     categoryHtml+
