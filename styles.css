@@ -67,3 +67,6 @@
 .family-member small{color:var(--muted);text-transform:capitalize}
 @media(max-width:950px){.family-grid{grid-template-columns:1fr 1fr}.family-grid .family-panel:last-child{grid-column:1/-1}}
 @media(max-width:650px){.family-actions,.family-grid{grid-template-columns:1fr}.family-invite{width:100%}}
+
+.family-preference-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.family-panel>.btn.outline{margin-top:8px}
