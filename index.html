@@ -248,7 +248,7 @@
   </div>
 </div>
 
-<script src="app.js?v=20260920-recipes-v1"></script>
+<script src="app.js?v=20260920-recipes-v2"></script>
 
 <div id="recipe-modal" class="recipe-modal" aria-hidden="true">
   <div class="recipe-card" role="dialog" aria-modal="true" aria-labelledby="recipe-title">
@@ -256,6 +256,11 @@
     <span id="recipe-type" class="eyebrow">MEAL</span>
     <h2 id="recipe-title">Recipe</h2>
     <p id="recipe-meta" class="recipe-meta"></p>
+    <div class="recipe-timebar" aria-label="Recipe timing">
+      <div><span>Prep</span><strong id="recipe-prep">10 min</strong></div>
+      <div><span>Cook</span><strong id="recipe-cook">15 min</strong></div>
+      <div><span>Total</span><strong id="recipe-total">25 min</strong></div>
+    </div>
     <div class="recipe-columns">
       <section><h3>Ingredients</h3><ul id="recipe-ingredients" class="recipe-ingredients"></ul></section>
       <section><h3>How to make it</h3><ol id="recipe-directions" class="recipe-directions"></ol></section>
