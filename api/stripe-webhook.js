@@ -74,6 +74,34 @@ async function stripeGetCheckoutSession(sessionId) {
   }
 }
 
+
+async function stripeGetSubscription(subscriptionId) {
+  if (!process.env.STRIPE_SECRET_KEY) {
+    throw new Error("STRIPE_SECRET_KEY is not configured");
+  }
+
+  const response = await fetch(
+    "https://api.stripe.com/v1/subscriptions/" + encodeURIComponent(subscriptionId),
+    {
+      headers: {
+        Authorization: "Bearer " + process.env.STRIPE_SECRET_KEY,
+      },
+    }
+  );
+
+  const text = await response.text();
+
+  if (!response.ok) {
+    throw new Error("Stripe subscription lookup failed (HTTP " + response.status + ")");
+  }
+
+  try {
+    return JSON.parse(text);
+  } catch {
+    throw new Error("Stripe subscription lookup returned invalid JSON");
+  }
+}
+
 async function updateProfile(userId, patch) {
   if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
     throw new Error("SUPABASE_SERVICE_ROLE_KEY is not configured");
@@ -170,7 +198,14 @@ module.exports = async function handler(req, res) {
         incoming.type === "customer.subscription.updated" ||
         incoming.type === "customer.subscription.deleted"
       ) {
-        authenticated = Boolean(eventObject.id && eventObject.object === "subscription");
+        const lookedUpSubscription = await stripeGetSubscription(eventObject.id);
+        authenticated =
+          lookedUpSubscription &&
+          lookedUpSubscription.id === eventObject.id &&
+          lookedUpSubscription.object === "subscription";
+        if (authenticated) {
+          eventObject = lookedUpSubscription;
+        }
       }
     }
 
