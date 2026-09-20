@@ -14,7 +14,8 @@ SmartMeal is a subscription meal-planning web app for households that want a sim
 - Premium meal favorites stored in Supabase
 - Premium meal substitutions
 - Interactive grocery checklist stored in the browser
-- Stripe-hosted Premium ($7.99/month) and Family ($12.99/month) subscription checkout in sandbox/test mode
+- Stripe-hosted Premium ($7.99/month) subscription checkout in sandbox/test mode
+- Dedicated Family subscription product/price prepared in Stripe sandbox; Family purchase is intentionally disabled until its shared-household features are finished
 - Stripe webhook-driven Premium access
 - Stripe Customer Portal entry point for subscription management
 - Responsive mobile layout
@@ -36,4 +37,4 @@ The current Stripe integration is configured for sandbox/test mode. Create match
 
 ## Roadmap
 
-Live grocery price comparison and shared Family household profiles are not implemented yet.
+Live grocery price comparison and shared Family household profiles are not implemented yet. The Family purchase button remains disabled until those features are ready.
