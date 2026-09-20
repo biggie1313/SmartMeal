@@ -57,7 +57,24 @@ function showToast(message){
 }
 
 function selectMeal(meal){
-  showToast((isPremium ? "⭐ Saved-ready meal: " : "Selected: ") + meal);
+  showToast((isPremium ? "Premium meal selected: " : "Selected: ") + meal);
+}
+
+function handleCheckoutReturn(){
+  const params = new URLSearchParams(window.location.search);
+  const result = params.get("premium");
+  if (!result) return;
+
+  if (result === "success") {
+    showToast("Payment received. Your subscription is being activated.");
+    setTimeout(refreshPremiumStatus, 1200);
+    setTimeout(refreshPremiumStatus, 4000);
+  } else if (result === "cancel") {
+    showToast("Checkout canceled. No payment was made.");
+  }
+
+  const cleanUrl = window.location.origin + window.location.pathname + window.location.hash;
+  window.history.replaceState({}, document.title, cleanUrl);
 }
 
 function escapeHtml(value){
@@ -1040,9 +1057,15 @@ document.addEventListener("DOMContentLoaded", () => {
     });
     familyGroceryList.addEventListener("click", (event) => {
       const button = event.target.closest("[data-family-grocery-delete]");
-      if (button) deleteFamilyGrocery(button.dataset.familyGroceryDelete);
+      if (button) {
+        event.preventDefault();
+        event.stopPropagation();
+        deleteFamilyGrocery(button.dataset.familyGroceryDelete);
+      }
     });
   }
+
+  handleCheckoutReturn();
 
   const favoriteList = document.getElementById("favorite-meals-list");
   if (favoriteList) {
