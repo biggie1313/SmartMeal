@@ -49,34 +49,62 @@
 <button class="btn" onclick="generate()">Generate my plan</button></div>
 <div class="preference-box">
   <div class="preference-head">
-    <div><strong>Foods you like</strong><p>Pick as many foods as you like. SmartMeal will prioritize your favorites in your personalized week.</p></div>
-    <div class="preference-count"><span id="preferred-grocery-count">0</span> selected</div>
+    <div><strong>Healthy foods you like</strong><p>Choose up to 12 foods. SmartMeal will use your picks to build 3 healthy meals a day for 7 days.</p></div>
+    <div class="preference-count"><span id="preferred-grocery-count">0 / 12</span> selected</div>
   </div>
-  <div id="grocery-preferences" class="grocery-preferences">
-    <label><input type="checkbox" data-preferred-grocery="Oats"> Oats</label>
-    <label><input type="checkbox" data-preferred-grocery="Bananas"> Bananas</label>
-    <label><input type="checkbox" data-preferred-grocery="Eggs"> Eggs</label>
-    <label><input type="checkbox" data-preferred-grocery="Bread"> Bread</label>
-    <label><input type="checkbox" data-preferred-grocery="Greek yogurt"> Greek yogurt</label>
-    <label><input type="checkbox" data-preferred-grocery="Berries"> Berries</label>
-    <label><input type="checkbox" data-preferred-grocery="Chicken breast"> Chicken breast</label>
-    <label><input type="checkbox" data-preferred-grocery="Rice"> Rice</label>
-    <label><input type="checkbox" data-preferred-grocery="Tortillas"> Tortillas</label>
-    <label><input type="checkbox" data-preferred-grocery="Ground turkey/beef"> Turkey / beef</label>
-    <label><input type="checkbox" data-preferred-grocery="Beans"> Beans</label>
-    <label><input type="checkbox" data-preferred-grocery="Pasta"> Pasta</label>
-    <label><input type="checkbox" data-preferred-grocery="Mixed vegetables"> Mixed vegetables</label>
-    <label><input type="checkbox" data-preferred-grocery="Carrots"> Carrots</label>
-    <label><input type="checkbox" data-preferred-grocery="Hummus"> Hummus</label>
-    <label><input type="checkbox" data-preferred-grocery="Apples"> Apples</label>
-    <label><input type="checkbox" data-preferred-grocery="Peanut butter"> Peanut butter</label>
-    <label><input type="checkbox" data-preferred-grocery="Fruit"> Fruit</label>
-    <label><input type="checkbox" data-preferred-grocery="Granola"> Granola</label>
-    <label><input type="checkbox" data-preferred-grocery="Cheese"> Cheese</label>
-    <label><input type="checkbox" data-preferred-grocery="Chickpeas"> Chickpeas</label>
-    <label><input type="checkbox" data-preferred-grocery="Lentils"> Lentils</label>
-    <label><input type="checkbox" data-preferred-grocery="Tofu"> Tofu</label>
-    <label><input type="checkbox" data-preferred-grocery="Avocado"> Avocado</label>
+  <div class="food-group">
+    <h4>Breakfast favorites</h4>
+    <div id="grocery-preferences" class="grocery-preferences">
+      <label><input type="checkbox" data-preferred-grocery="Oats"> Oats</label>
+      <label><input type="checkbox" data-preferred-grocery="Bananas"> Bananas</label>
+      <label><input type="checkbox" data-preferred-grocery="Berries"> Berries</label>
+      <label><input type="checkbox" data-preferred-grocery="Greek yogurt"> Greek yogurt</label>
+      <label><input type="checkbox" data-preferred-grocery="Eggs"> Eggs</label>
+      <label><input type="checkbox" data-preferred-grocery="Avocado"> Avocado</label>
+      <label><input type="checkbox" data-preferred-grocery="Apples"> Apples</label>
+      <label><input type="checkbox" data-preferred-grocery="Peanut butter"> Peanut butter</label>
+      <label><input type="checkbox" data-preferred-grocery="Chia seeds"> Chia seeds</label>
+      <label><input type="checkbox" data-preferred-grocery="Whole-grain bread"> Whole-grain bread</label>
+      <label><input type="checkbox" data-preferred-grocery="Almonds"> Almonds</label>
+      <label><input type="checkbox" data-preferred-grocery="Walnuts"> Walnuts</label>
+      <label><input type="checkbox" data-preferred-grocery="Pumpkin seeds"> Pumpkin seeds</label>
+    </div>
+  </div>
+  <div class="food-group">
+    <h4>Vegetables & produce</h4>
+    <div class="grocery-preferences">
+      <label><input type="checkbox" data-preferred-grocery="Spinach"> Spinach</label>
+      <label><input type="checkbox" data-preferred-grocery="Tomatoes"> Tomatoes</label>
+      <label><input type="checkbox" data-preferred-grocery="Broccoli"> Broccoli</label>
+      <label><input type="checkbox" data-preferred-grocery="Carrots"> Carrots</label>
+      <label><input type="checkbox" data-preferred-grocery="Mixed vegetables"> Mixed vegetables</label>
+      <label><input type="checkbox" data-preferred-grocery="Sweet potatoes"> Sweet potatoes</label>
+      <label><input type="checkbox" data-preferred-grocery="Hummus"> Hummus</label>
+    </div>
+  </div>
+  <div class="food-group">
+    <h4>Protein & plant proteins</h4>
+    <div class="grocery-preferences">
+      <label><input type="checkbox" data-preferred-grocery="Chicken breast"> Chicken breast</label>
+      <label><input type="checkbox" data-preferred-grocery="Turkey"> Turkey</label>
+      <label><input type="checkbox" data-preferred-grocery="Salmon"> Salmon</label>
+      <label><input type="checkbox" data-preferred-grocery="Tuna"> Tuna</label>
+      <label><input type="checkbox" data-preferred-grocery="Shrimp"> Shrimp</label>
+      <label><input type="checkbox" data-preferred-grocery="Tofu"> Tofu</label>
+      <label><input type="checkbox" data-preferred-grocery="Chickpeas"> Chickpeas</label>
+      <label><input type="checkbox" data-preferred-grocery="Lentils"> Lentils</label>
+      <label><input type="checkbox" data-preferred-grocery="Black beans"> Black beans</label>
+      <label><input type="checkbox" data-preferred-grocery="Beans"> Beans</label>
+    </div>
+  </div>
+  <div class="food-group">
+    <h4>Whole grains & healthy extras</h4>
+    <div class="grocery-preferences">
+      <label><input type="checkbox" data-preferred-grocery="Brown rice"> Brown rice</label>
+      <label><input type="checkbox" data-preferred-grocery="Quinoa"> Quinoa</label>
+      <label><input type="checkbox" data-preferred-grocery="Whole-grain tortillas"> Whole-grain tortillas</label>
+      <label><input type="checkbox" data-preferred-grocery="Olive oil"> Olive oil</label>
+    </div>
   </div>
   <button class="text-link preference-clear" type="button" id="clear-preferred-groceries">Clear selections</button>
 </div>
@@ -205,5 +233,5 @@
   </div>
 </div>
 
-<script src="app.js?v=20260920-food-preferences-v2"></script>
+<script src="app.js?v=20260920-healthy-3-meals-v3"></script>
 </body></html>
