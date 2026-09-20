@@ -446,3 +446,4 @@ footer{
 @media(max-width:950px){.grocery-preferences{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:700px){.grocery-preferences{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:520px){.grocery-preferences{grid-template-columns:1fr}.preference-head{flex-direction:column}}
+.preference-toolbar{display:flex;gap:10px;justify-content:flex-start;flex-wrap:wrap;margin:14px 0 4px}.food-group-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px}.food-group-note{margin:2px 0 0;color:var(--muted);font-size:12px}.exclusions-group{margin-top:20px;padding-top:16px;border-top:1px solid var(--line)}.exclusion-list{grid-template-columns:repeat(4,minmax(0,1fr))}.preference-summary small.preference-exclusions{display:block;margin-top:7px;color:var(--muted)}
