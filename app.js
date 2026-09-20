@@ -41,7 +41,70 @@ mediterranean:[
 ["Greek yogurt + fruit","Lemon chicken bowls"],["Eggs + tomato toast","Turkey & hummus wraps"],["Oatmeal + berries","Greek chicken salad"],["Eggs + spinach","Mediterranean pasta"],["Yogurt + granola","Chickpea veggie bowls"],["Avocado toast + eggs","Herb chicken & potatoes"],["Fruit + yogurt","Leftover Mediterranean bowl"]
 ]
 };
-const groceries=["Oats","Bananas","Eggs","Bread","Greek yogurt","Berries","Chicken breast","Rice","Tortillas","Ground turkey/beef","Beans","Pasta","Mixed vegetables","Carrots","Hummus","Apples","Peanut butter","Fruit","Granola","Cheese"];
+const groceryCatalog=["Oats","Bananas","Eggs","Bread","Greek yogurt","Berries","Chicken breast","Rice","Tortillas","Ground turkey/beef","Beans","Pasta","Mixed vegetables","Carrots","Hummus","Apples","Peanut butter","Fruit","Granola","Cheese","Chickpeas","Lentils","Tofu","Avocado","Spinach","Tomatoes","Potatoes","Cottage cheese","Shrimp","Tuna","Quinoa","Chia seeds","Black beans"];
+let currentGroceries=[];
+
+const groceryRules=[
+  {pattern:/oatmeal|overnight oats|protein oats|oat/i,items:["Oats"]},
+  {pattern:/banana/i,items:["Bananas"]},
+  {pattern:/apple/i,items:["Apples"]},
+  {pattern:/egg|omelet|muffin/i,items:["Eggs"]},
+  {pattern:/toast|french toast/i,items:["Bread"]},
+  {pattern:/yogurt/i,items:["Greek yogurt"]},
+  {pattern:/berries/i,items:["Berries"]},
+  {pattern:/granola/i,items:["Granola"]},
+  {pattern:/peanut butter/i,items:["Peanut butter"]},
+  {pattern:/fruit/i,items:["Fruit"]},
+  {pattern:/chia/i,items:["Chia seeds"]},
+  {pattern:/cottage cheese/i,items:["Cottage cheese"]},
+  {pattern:/avocado/i,items:["Avocado"]},
+  {pattern:/spinach/i,items:["Spinach"]},
+  {pattern:/tomato/i,items:["Tomatoes"]},
+  {pattern:/chicken/i,items:["Chicken breast"]},
+  {pattern:/turkey|beef/i,items:["Ground turkey/beef"]},
+  {pattern:/tuna/i,items:["Tuna"]},
+  {pattern:/shrimp/i,items:["Shrimp"]},
+  {pattern:/tofu/i,items:["Tofu"]},
+  {pattern:/chickpea/i,items:["Chickpeas"]},
+  {pattern:/lentil/i,items:["Lentils"]},
+  {pattern:/black bean/i,items:["Black beans"]},
+  {pattern:/bean/i,items:["Beans"]},
+  {pattern:/rice|grain bowl|bowl/i,items:["Rice"]},
+  {pattern:/quinoa/i,items:["Quinoa"]},
+  {pattern:/pasta/i,items:["Pasta"]},
+  {pattern:/taco|wrap|quesadilla|tortilla|lettuce taco/i,items:["Tortillas"]},
+  {pattern:/hummus/i,items:["Hummus"]},
+  {pattern:/stir-fry|stir fry|vegetable|veggie|broccoli/i,items:["Mixed vegetables","Carrots"]},
+  {pattern:/potato/i,items:["Potatoes"]},
+  {pattern:/chili/i,items:["Beans","Carrots"]}
+];
+
+function ingredientsForMeal(meal){
+  const found=[];
+  groceryRules.forEach(rule=>{
+    if(rule.pattern.test(meal)){
+      rule.items.forEach(item=>{ if(!found.includes(item)) found.push(item); });
+    }
+  });
+  if(found.length===0){
+    if(/leftover/i.test(meal)) return ["Rice","Mixed vegetables"];
+    return ["Mixed vegetables"];
+  }
+  if(found.some(x=>["Chicken breast","Ground turkey/beef","Tofu","Shrimp","Tuna"].includes(x)) && !found.includes("Mixed vegetables")) found.push("Mixed vegetables");
+  return found;
+}
+
+function buildGroceryList(week){
+  const map=new Map();
+  week.flat().forEach(meal=>{
+    ingredientsForMeal(meal).forEach(item=>{
+      if(!map.has(item)) map.set(item,new Set());
+      map.get(item).add(meal);
+    });
+  });
+  currentGroceries=Array.from(map.entries()).map(([item,meals])=>({item,meals:Array.from(meals)})).sort((a,b)=>a.item.localeCompare(b.item));
+  return currentGroceries;
+}
 const substitutions={
   "Chicken rice bowls":["Turkey rice bowls","Tofu rice bowls","Chicken quinoa bowls"],
   "Turkey tacos":["Chicken tacos","Black bean tacos","Turkey lettuce tacos"],
@@ -218,7 +281,7 @@ function generate(){
       `<div class="day"><b>${days[i]}</b>${d.map(m=>
         `<button type="button" class="meal" data-meal="${escapeHtml(m)}">${escapeHtml(m)}${isPremium ? ' ☆' : ''}</button>`
       ).join("")}</div>`).join("")}</div>
-    <div class="groceries">${groceries.map(g=>`<div class="gitem">☐ ${g}</div>`).join("")}</div>`;
+    ${renderGroceryList(buildGroceryList(currentWeek))}`;
 }
 
 async function saveCurrentPlan(){
@@ -266,7 +329,7 @@ async function saveCurrentPlan(){
 }
 
 function groceryStorageKey(){
-  return "smartmeal:grocery-checks";
+  return currentUserId ? "smartmeal:grocery-checks:" + currentUserId : "smartmeal:grocery-checks";
 }
 
 function groceryChecks(){
@@ -315,23 +378,37 @@ function enhancePlannerControls(){
     meal.dataset.smartEnhanced = "1";
   });
 
-  const checks = groceryChecks();
-  result.querySelectorAll(".gitem").forEach((item, index) => {
+  result.querySelectorAll(".gitem").forEach(item => {
     if (item.dataset.groceryEnhanced === "1") return;
-    const label = item.textContent.replace("☐", "").trim();
-    item.textContent = "";
-    const checkbox = document.createElement("input");
-    checkbox.type = "checkbox";
-    checkbox.dataset.groceryIndex = String(index);
-    checkbox.checked = checks[index] === true;
-    const text = document.createElement("span");
-    text.textContent = label;
-    item.appendChild(checkbox);
-    item.appendChild(text);
+    const checkbox = item.querySelector("input[type=checkbox]");
+    if (checkbox) {
+      checkbox.dataset.groceryName = item.dataset.groceryName || "";
+      checkbox.checked = groceryChecks()[item.dataset.groceryName] === true;
+    }
     item.dataset.groceryEnhanced = "1";
   });
 }
 
+function renderGroceryList(list){
+  const items=list || [];
+  if(!items.length) return "<div class=\"grocery-empty\">No grocery items found for this week yet.</div>";
+  const checked=groceryChecks();
+  return `
+    <div class="grocery-header">
+      <div><strong>Your grocery list</strong><span>${items.length} ingredients based on the meals above</span></div>
+      <span class="grocery-count">${items.length} items</span>
+    </div>
+    <div class="groceries">
+      ${items.map(entry=>`
+        <div class="gitem" data-grocery-name="${escapeHtml(entry.item)}">
+          <input type="checkbox" ${checked[entry.item] === true ? "checked" : ""}>
+          <div class="grocery-copy">
+            <span class="grocery-name">${escapeHtml(entry.item)}</span>
+            <small>Used in: ${escapeHtml(entry.meals.slice(0,3).join(" · "))}${entry.meals.length>3 ? " · +" + (entry.meals.length-3) + " more" : ""}</small>
+          </div>
+        </div>`).join("")}
+    </div>`;
+}
 function updateFavoriteButtons(){
   document.querySelectorAll(".meal-favorite").forEach(button => {
     const meal = button.dataset.favoriteMeal || "";
@@ -622,7 +699,7 @@ async function shareCurrentGroceries(){
     if(!user) throw new Error("Sign in required");
     const {error}=await supabaseClient
       .from("household_grocery_items")
-      .insert(groceries.map(item=>({household_id:familyHousehold.household_id,item,added_by:user.id})));
+      .insert((currentGroceries.length ? currentGroceries : buildGroceryList(currentWeek)).map(entry=>({household_id:familyHousehold.household_id,item:entry.item,added_by:user.id})));
     if(error) throw error;
     await loadFamilyGrocery();
     document.getElementById("family")?.scrollIntoView({behavior:"smooth"});
@@ -1058,10 +1135,10 @@ document.addEventListener("DOMContentLoaded", () => {
   if (!result) return;
 
   result.addEventListener("change", (event) => {
-    const checkbox = event.target.closest("[data-grocery-index]");
+    const checkbox = event.target.closest("input[type=checkbox][data-grocery-name]");
     if (!checkbox) return;
     const checks = groceryChecks();
-    checks[checkbox.dataset.groceryIndex] = checkbox.checked;
+    checks[checkbox.dataset.groceryName] = checkbox.checked;
     localStorage.setItem(groceryStorageKey(), JSON.stringify(checks));
   });
 
