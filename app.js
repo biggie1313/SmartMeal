@@ -638,12 +638,64 @@ function formatRecipeMinutes(minutes){
   return hours+(hours===1?" hr":" hrs")+(mins ? " "+mins+" min" : "");
 }
 
+let currentRecipeMeal="";
+
+function saveRecipeFromModal(){
+  if(!currentRecipeMeal) return;
+  toggleFavorite(currentRecipeMeal);
+}
+
+function printRecipe(){
+  if(!currentRecipeMeal) return;
+  const meta=mealMetaMap[currentRecipeMeal] || {type:"meal",foods:ingredientsForMeal(currentRecipeMeal),cost:2,tags:[]};
+  const people=Number(document.getElementById("people")?.value)||4;
+  const timing=recipeTiming(currentRecipeMeal,meta.type);
+  const ingredients=(meta.foods||ingredientsForMeal(currentRecipeMeal)).map(food=>{
+    return "<li><span>"+escapeHtml(food)+"</span><strong>"+escapeHtml(recipeQuantity(food,people))+"</strong></li>";
+  }).join("");
+  const directions=recipeSteps(currentRecipeMeal,meta.type).map(step=>"<li>"+escapeHtml(step)+"</li>").join("");
+  const tagText=(meta.tags||[]).map(tag=>tag==="protein"?"higher protein":tag==="fiber"?"fiber-focused":tag==="lowercarb"?"lower carb":tag==="mediterranean"?"Mediterranean":"").filter(Boolean).join(" · ");
+  const win=window.open("","_blank");
+  if(!win){showToast("Please allow pop-ups to print the recipe.");return;}
+  win.document.write("<!doctype html><html><head><title>"+escapeHtml(currentRecipeMeal)+" · SmartMeal</title><style>body{font-family:Arial,sans-serif;max-width:760px;margin:40px auto;padding:0 22px;color:#1e2b25}h1{margin-bottom:6px}.meta{color:#66736a}.time{display:flex;gap:24px;margin:20px 0;padding:14px;border:1px solid #dfe7e1;border-radius:10px}.time span{display:block;font-size:11px;text-transform:uppercase;color:#66736a}.cols{display:grid;grid-template-columns:1fr 1.2fr;gap:28px}@media(max-width:700px){.cols{grid-template-columns:1fr}}li{margin:9px 0;line-height:1.45}strong{float:right}.note{margin-top:24px;color:#66736a;font-size:12px}</style></head><body><h1>"+escapeHtml(currentRecipeMeal)+"</h1><div class="meta">"+recipeTypeLabel(meta.type)+" · "+people+" "+(people===1?"serving":"servings")+(tagText?" · "+escapeHtml(tagText):"")+"</div><div class="time"><div><span>Prep</span><b>"+formatRecipeMinutes(timing.prep)+"</b></div><div><span>Cook</span><b>"+formatRecipeMinutes(timing.cook)+"</b></div><div><span>Total</span><b>"+formatRecipeMinutes(timing.total)+"</b></div></div><div class="cols"><section><h2>Ingredients</h2><ul>"+ingredients+"</ul></section><section><h2>How to make it</h2><ol>"+directions+"</ol></section></div><p class="note">Quantities are scaled to the selected household size. Adjust seasoning and portions to suit your household.</p></body></html>");
+  win.document.close();win.focus();setTimeout(()=>win.print(),150);
+}
+
+function addRecipeIngredientsToGroceryList(meal){
+  const people=Number(document.getElementById("people")?.value)||4;
+  const existing=new Map((currentGroceries||[]).map(item=>[item.item,item]));
+  const meta=mealMetaMap[meal] || {foods:ingredientsForMeal(meal)};
+  let added=0;
+  (meta.foods||ingredientsForMeal(meal)).forEach(item=>{
+    if(existing.has(item)) return;
+    const info=groceryMeta[item] || {category:"Other",unit:"each",perPerson:1};
+    const entry={item,category:info.category,quantity:formatGroceryQuantity(info.perPerson*people,info.unit),meals:[meal+" · recipe add-on"],servings:people};
+    existing.set(item,entry);added++;
+  });
+  currentGroceries=Array.from(existing.values()).sort((a,b)=>a.category.localeCompare(b.category)||a.item.localeCompare(b.item));
+  const groceryArea=document.querySelector("#result .grocery-area");
+  if(groceryArea){
+    const fresh=document.createElement("div");
+    fresh.innerHTML=renderGroceryList(currentGroceries,people,document.getElementById("budget")?.value||"mid");
+    groceryArea.replaceWith(fresh.firstElementChild);
+    enhancePlannerControls();
+    document.querySelector("#result .grocery-area")?.scrollIntoView({behavior:"smooth",block:"start"});
+  }
+  showToast(added ? added+" recipe ingredient"+(added===1?"":"s")+" added to your grocery list." : "All recipe ingredients are already on your weekly grocery list.");
+}
+
+function updateRecipeSaveButton(){
+  const button=document.getElementById("recipe-save");
+  if(button) button.textContent=favoriteMeals.has(currentRecipeMeal) ? "★ Saved recipe" : "☆ Save recipe";
+}
+
 function recipeTypeLabel(type){
   return type ? type.charAt(0).toUpperCase()+type.slice(1) : "Meal";
 }
 
 function openRecipe(meal){
   const modal=document.getElementById("recipe-modal");
+  currentRecipeMeal=meal;
   if(!modal) return;
   const meta=mealMetaMap[meal] || {type:"meal",foods:ingredientsForMeal(meal),cost:2,tags:[]};
   const people=Number(document.getElementById("people")?.value)||4;
@@ -663,6 +715,7 @@ function openRecipe(meal){
   if(prep) prep.textContent=formatRecipeMinutes(timing.prep);
   if(cook) cook.textContent=formatRecipeMinutes(timing.cook);
   if(total) total.textContent=formatRecipeMinutes(timing.total);
+  updateRecipeSaveButton();
   document.getElementById("recipe-ingredients").innerHTML=ingredients;
   document.getElementById("recipe-directions").innerHTML=directions;
   modal.classList.add("open");
