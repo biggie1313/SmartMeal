@@ -248,5 +248,20 @@
   </div>
 </div>
 
-<script src="app.js?v=20260920-grocery-v8"></script>
+<script src="app.js?v=20260920-recipes-v1"></script>
+
+<div id="recipe-modal" class="recipe-modal" aria-hidden="true">
+  <div class="recipe-card" role="dialog" aria-modal="true" aria-labelledby="recipe-title">
+    <button type="button" class="recipe-close" data-recipe-close aria-label="Close recipe">×</button>
+    <span id="recipe-type" class="eyebrow">MEAL</span>
+    <h2 id="recipe-title">Recipe</h2>
+    <p id="recipe-meta" class="recipe-meta"></p>
+    <div class="recipe-columns">
+      <section><h3>Ingredients</h3><ul id="recipe-ingredients" class="recipe-ingredients"></ul></section>
+      <section><h3>How to make it</h3><ol id="recipe-directions" class="recipe-directions"></ol></section>
+    </div>
+    <div class="recipe-note">Quantities are scaled to the household size selected in your planner. Adjust seasoning and portions to suit your household.</div>
+    <button type="button" class="btn" data-recipe-close>Back to my week</button>
+  </div>
+</div>
 </body></html>
