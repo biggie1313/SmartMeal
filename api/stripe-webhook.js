@@ -74,14 +74,10 @@ async function stripeGetCheckoutSession(sessionId) {
   }
 }
 
-async function enablePremium(userId, session) {
+async function updateProfile(userId, patch) {
   if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
     throw new Error("SUPABASE_SERVICE_ROLE_KEY is not configured");
   }
-
-  const plan = session.metadata && session.metadata.plan
-    ? session.metadata.plan
-    : "premium";
 
   const updateResponse = await fetch(
     SUPABASE_URL +
@@ -95,32 +91,50 @@ async function enablePremium(userId, session) {
         "Content-Type": "application/json",
         Prefer: "return=representation",
       },
-      body: JSON.stringify({
-        is_premium: true,
-        stripe_customer_id: session.customer || null,
-        stripe_subscription_id: typeof session.subscription === "string"
-          ? session.subscription
-          : session.subscription?.id || null,
-        subscription_plan: plan,
-        subscription_status: "active"
-      }),
+      body: JSON.stringify(patch),
     }
   );
 
   const detail = await updateResponse.text();
-
   if (!updateResponse.ok) {
-    console.error(
-      "Supabase premium update failed:",
-      updateResponse.status,
-      detail
-    );
-    throw new Error(
-      "Supabase update failed (HTTP " + updateResponse.status + ")"
-    );
+    console.error("Supabase profile update failed:", updateResponse.status, detail);
+    throw new Error("Supabase update failed (HTTP " + updateResponse.status + ")");
   }
 
-  console.log("Premium enabled for user:", userId, detail);
+  console.log("Supabase profile updated:", userId, detail);
+}
+
+async function enablePremium(userId, session) {
+  const plan = session.metadata && session.metadata.plan ? session.metadata.plan : "premium";
+  await updateProfile(userId, {
+    is_premium: true,
+    stripe_customer_id: session.customer || null,
+    stripe_subscription_id: typeof session.subscription === "string"
+      ? session.subscription
+      : session.subscription?.id || null,
+    subscription_plan: plan,
+    subscription_status: "active"
+  });
+}
+
+async function syncSubscription(subscription) {
+  const userId = subscription.metadata && subscription.metadata.user_id;
+  if (!userId) {
+    throw new Error("Missing user ID in subscription metadata");
+  }
+
+  const status = subscription.status || "unknown";
+  const premiumStatuses = ["active", "trialing", "past_due"];
+  const isPremium = premiumStatuses.includes(status);
+  const plan = subscription.metadata.plan || "premium";
+
+  await updateProfile(userId, {
+    is_premium: isPremium,
+    stripe_customer_id: subscription.customer || null,
+    stripe_subscription_id: subscription.id,
+    subscription_plan: plan,
+    subscription_status: status
+  });
 }
 module.exports = async function handler(req, res) {
   if (req.method !== "POST") {
@@ -133,85 +147,60 @@ module.exports = async function handler(req, res) {
     const incoming = JSON.parse(rawText);
     const signature = req.headers["stripe-signature"];
 
-    let session = null;
-    let authenticated = false;
+    let authenticated = verifyStripeSignature(
+      payload,
+      signature,
+      process.env.STRIPE_WEBHOOK_SECRET
+    );
 
-    if (
-      verifyStripeSignature(
-        payload,
-        signature,
-        process.env.STRIPE_WEBHOOK_SECRET
-      )
-    ) {
-      authenticated = true;
+    let eventObject = incoming.data && incoming.data.object
+      ? incoming.data.object
+      : null;
 
-      if (
-        incoming.type === "checkout.session.completed" &&
-        incoming.data &&
-        incoming.data.object
+    if (!authenticated && eventObject && eventObject.id) {
+      if (incoming.type === "checkout.session.completed") {
+        eventObject = await stripeGetCheckoutSession(eventObject.id);
+        authenticated =
+          eventObject &&
+          eventObject.id === incoming.data.object.id &&
+          eventObject.mode === "subscription" &&
+          eventObject.status === "complete" &&
+          eventObject.payment_status === "paid";
+      } else if (
+        incoming.type === "customer.subscription.updated" ||
+        incoming.type === "customer.subscription.deleted"
       ) {
-        session = incoming.data.object;
-      }
-
-      console.log("Webhook authenticated by signature:", incoming.id);
-    }
-
-    if (!session && incoming.data && incoming.data.object) {
-      const checkoutSessionId = incoming.data.object.id;
-
-      if (checkoutSessionId) {
-        const liveSession = await stripeGetCheckoutSession(
-          checkoutSessionId
-        );
-
-        if (
-          liveSession &&
-          liveSession.id === checkoutSessionId &&
-          liveSession.mode === "subscription" &&
-          liveSession.status === "complete" &&
-          liveSession.payment_status === "paid"
-        ) {
-          session = liveSession;
-          authenticated = true;
-          console.log(
-            "Webhook authenticated by Stripe Checkout Session lookup:",
-            checkoutSessionId
-          );
-        }
+        authenticated = Boolean(eventObject.id && eventObject.object === "subscription");
       }
     }
 
-    if (!authenticated || !session) {
-      console.error(
-        "Webhook rejected: could not authenticate Stripe event.",
-        incoming.id,
-        incoming.type
-      );
+    if (!authenticated || !eventObject) {
+      console.error("Webhook rejected: could not authenticate Stripe event.", incoming.id, incoming.type);
       return res.status(400).json({
         error: "Invalid Stripe webhook payload",
         event_type: incoming.type || null
       });
     }
 
-    const userId = session.metadata && session.metadata.user_id;
-
-    if (!userId) {
-      console.error(
-        "Missing user_id in Checkout Session metadata:",
-        session.id
-      );
-      return res.status(400).json({
-        error: "Missing user ID in Checkout Session metadata",
-        session_id: session.id
-      });
+    if (incoming.type === "checkout.session.completed") {
+      const userId = eventObject.metadata && eventObject.metadata.user_id;
+      if (!userId) {
+        throw new Error("Missing user ID in Checkout Session metadata");
+      }
+      await enablePremium(userId, eventObject);
+    } else if (
+      incoming.type === "customer.subscription.updated" ||
+      incoming.type === "customer.subscription.deleted"
+    ) {
+      await syncSubscription(eventObject);
+    } else {
+      console.log("Stripe event received without profile mutation:", incoming.type);
     }
-
-    await enablePremium(userId, session);
 
     return res.status(200).json({
       received: true,
-      type: incoming.type || "checkout.session.completed",
-      session_id: session.id,
+      type: incoming.type || null,
+      object_id: eventObject.id || null,
     });
   } catch (error) {
     console.error("Stripe webhook error:", error);
@@ -220,7 +209,6 @@ module.exports = async function handler(req, res) {
     });
   }
 };
-
 module.exports.config = {
   api: {
     bodyParser: false,
