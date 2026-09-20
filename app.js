@@ -48,7 +48,8 @@ let preferredGroceries = new Set();
 const breakfastPreferenceMeals = [
   "Oatmeal + banana","Oatmeal + berries","Overnight oats + chia","Eggs + toast","Eggs + avocado",
   "Greek yogurt + berries","Yogurt + granola","Peanut butter banana toast","Apple cinnamon oatmeal",
-  "Cottage cheese + fruit","Protein oats","Pancakes + banana","French toast + banana","Avocado toast + eggs"
+  "Cottage cheese + fruit","Protein oats","Pancakes + banana","French toast + banana","Avocado toast + eggs",
+  "Greek yogurt + fruit","Oatmeal + peanut butter","Eggs + spinach","Yogurt + berries + granola"
 ];
 
 const dinnerPreferenceMeals = [
@@ -57,8 +58,117 @@ const dinnerPreferenceMeals = [
   "Turkey lettuce tacos","Chicken pesto vegetables","Lemon chicken bowls","Turkey & hummus wraps","Greek chicken salad",
   "Mediterranean pasta","Chickpea veggie bowls","Herb chicken & potatoes","Cheesy chicken rice bowls",
   "Chicken quesadillas","Mild beef & bean chili","Hummus veggie wraps","Beef & broccoli bowls","Chicken quinoa bowls",
-  "Tuna salad bowls","Shrimp stir-fry","Three-bean chili","Lentil chili","Chickpea wraps","Black bean rice bowls"
+  "Tuna salad bowls","Shrimp stir-fry","Three-bean chili","Lentil chili","Chickpea wraps","Black bean rice bowls",
+  "Chicken avocado rice bowls","Chicken and spinach pasta","Turkey and cheese wraps","Chicken hummus bowls",
+  "Chicken tomato rice bowls","Turkey pasta with vegetables","Tofu avocado bowls","Chickpea hummus wraps",
+  "Lentil rice bowls","Black bean quesadillas","Cheesy chicken tacos","Chicken peanut sauce bowls",
+  "Chicken and potato bowls","Turkey broccoli rice bowls","Tuna avocado wraps","Shrimp rice bowls"
 ];
+
+const preferenceMealTemplates = {
+  "Oats":[
+    "Oatmeal + banana","Oatmeal + berries","Overnight oats + chia","Oatmeal + peanut butter"
+  ],
+  "Bananas":[
+    "Oatmeal + banana","Peanut butter banana toast","Pancakes + banana","French toast + banana"
+  ],
+  "Eggs":[
+    "Eggs + toast","Eggs + avocado","Eggs + spinach","Eggs + berries"
+  ],
+  "Bread":[
+    "Eggs + toast","Peanut butter banana toast","Avocado toast + eggs","French toast + banana"
+  ],
+  "Greek yogurt":[
+    "Greek yogurt + berries","Greek yogurt + fruit","Yogurt + granola","Yogurt + berries + granola"
+  ],
+  "Berries":[
+    "Oatmeal + berries","Greek yogurt + berries","Yogurt + berries + granola"
+  ],
+  "Chicken breast":[
+    "Chicken rice bowls","Chicken pasta","Chicken stir-fry","Chicken wraps","Chicken avocado rice bowls",
+    "Chicken and spinach pasta","Chicken hummus bowls","Chicken tomato rice bowls","Chicken and potato bowls"
+  ],
+  "Rice":[
+    "Chicken rice bowls","Chickpea rice bowls","Black bean rice bowls","Chicken avocado rice bowls",
+    "Turkey broccoli rice bowls","Shrimp rice bowls"
+  ],
+  "Tortillas":[
+    "Turkey tacos","Chicken wraps","Black bean tacos","Chicken quesadillas","Turkey and cheese wraps",
+    "Cheesy chicken tacos","Tuna avocado wraps"
+  ],
+  "Ground turkey/beef":[
+    "Turkey tacos","Bean & beef chili","Mild beef & bean chili","Turkey pasta with vegetables","Turkey broccoli rice bowls"
+  ],
+  "Beans":[
+    "Bean & beef chili","Black bean tacos","Vegetarian chili","Three-bean chili","Black bean rice bowls","Black bean quesadillas"
+  ],
+  "Pasta":[
+    "Chicken pasta","Lentil pasta","Mediterranean pasta","Chicken and spinach pasta","Turkey pasta with vegetables"
+  ],
+  "Mixed vegetables":[
+    "Chicken stir-fry","Vegetarian chili","Chicken and potato bowls","Turkey broccoli rice bowls","Tofu stir-fry"
+  ],
+  "Carrots":[
+    "Chicken stir-fry","Vegetarian chili","Turkey broccoli rice bowls"
+  ],
+  "Hummus":[
+    "Turkey & hummus wraps","Hummus veggie wraps","Chicken hummus bowls","Chickpea hummus wraps"
+  ],
+  "Apples":[
+    "Apple cinnamon oatmeal","Greek yogurt + fruit","Oatmeal + peanut butter"
+  ],
+  "Peanut butter":[
+    "Peanut butter banana toast","Oatmeal + peanut butter"
+  ],
+  "Fruit":[
+    "Greek yogurt + fruit","Cottage cheese + fruit","Yogurt + berries + granola"
+  ],
+  "Granola":[
+    "Yogurt + granola","Yogurt + berries + granola"
+  ],
+  "Cheese":[
+    "Cheesy chicken rice bowls","Turkey and cheese wraps","Black bean quesadillas","Cheesy chicken tacos"
+  ],
+  "Chickpeas":[
+    "Chickpea rice bowls","Chickpea veggie bowls","Chickpea wraps","Chickpea hummus wraps"
+  ],
+  "Lentils":[
+    "Lentil pasta","Lentil chili","Lentil rice bowls"
+  ],
+  "Tofu":[
+    "Tofu stir-fry","Tofu avocado bowls"
+  ],
+  "Avocado":[
+    "Eggs + avocado","Avocado toast + eggs","Chicken avocado rice bowls","Tuna avocado wraps","Tofu avocado bowls"
+  ],
+  "Spinach":[
+    "Eggs + spinach","Chicken and spinach pasta","Chicken stir-fry"
+  ],
+  "Tomatoes":[
+    "Chicken tomato rice bowls","Greek chicken salad","Mediterranean pasta"
+  ],
+  "Potatoes":[
+    "Herb chicken & potatoes","Chicken and potato bowls"
+  ],
+  "Cottage cheese":[
+    "Cottage cheese + fruit","Cottage cheese + berries"
+  ],
+  "Shrimp":[
+    "Shrimp stir-fry","Shrimp rice bowls"
+  ],
+  "Tuna":[
+    "Tuna salad bowls","Tuna avocado wraps"
+  ],
+  "Quinoa":[
+    "Chicken quinoa bowls","Quinoa veggie bowls","Chicken avocado quinoa bowls"
+  ],
+  "Chia seeds":[
+    "Overnight oats + chia","Greek yogurt + chia"
+  ],
+  "Black beans":[
+    "Black bean tacos","Black bean rice bowls","Black bean quesadillas"
+  ]
+};
 
 function preferredGroceriesStorageKey(){
   return currentUserId ? "smartmeal:preferred-groceries:" + currentUserId : "smartmeal:preferred-groceries";
@@ -91,20 +201,27 @@ function updatePreferredGroceryCount(){
   if(count) count.textContent=selectedPreferredGroceries().length;
 }
 
+function mealUsesPreference(meal,item){
+  const text=meal.toLowerCase();
+  const aliases={
+    "ground turkey/beef":["turkey","beef"],
+    "mixed vegetables":["vegetable","veggie","stir-fry","broccoli"],
+    "chicken breast":["chicken"],
+    "greek yogurt":["greek yogurt","yogurt"],
+    "peanut butter":["peanut butter"],
+    "cheese":["cheese","cheesy"],
+    "chickpeas":["chickpea"],
+    "black beans":["black bean"],
+    "chickpea":["chickpea"]
+  };
+  return (aliases[item] || [item.toLowerCase()]).some(alias=>text.includes(alias));
+}
+
 function scoreMealForPreferences(meal, selected){
   const ingredients = ingredientsForMeal(meal);
   let score = 0;
   selected.forEach(item=>{
-    if(ingredients.includes(item)) score += 8;
-    const text = meal.toLowerCase();
-    const aliases = {
-      "ground turkey/beef":["turkey","beef"],
-      "mixed vegetables":["vegetable","veggie","stir-fry","broccoli"],
-      "chicken breast":["chicken"],
-      "greek yogurt":["yogurt"],
-      "peanut butter":["peanut butter"]
-    };
-    if((aliases[item] || [item.toLowerCase()]).some(alias=>text.includes(alias))) score += 3;
+    if(ingredients.includes(item) || mealUsesPreference(meal,item)) score += 12;
   });
   return score;
 }
@@ -120,13 +237,20 @@ function personalizeWeek(basePlan, diet, selected){
 
   const baseMeals = basePlan.flat();
   const styleMeals = (plans[diet] || []).flat();
-  const pool = [...new Set([...baseMeals,...styleMeals,...breakfastPreferenceMeals,...dinnerPreferenceMeals])]
-    .filter(meal=>isMealCompatible(meal,diet));
+  const preferenceMeals = selected.flatMap(item=>preferenceMealTemplates[item] || []);
+  const pool = [...new Set([
+    ...preferenceMeals,
+    ...baseMeals,
+    ...styleMeals,
+    ...breakfastPreferenceMeals,
+    ...dinnerPreferenceMeals
+  ])].filter(meal=>isMealCompatible(meal,diet));
 
   const chosen=[];
   const used=new Set();
+  const covered=new Set();
 
-  for(let dayIndex=0; dayIndex<7; dayIndex++){
+  for(let dayIndex=0;dayIndex<7;dayIndex++){
     const baseDay=basePlan[dayIndex] || [];
     const dayMeals=[];
     for(let slot=0;slot<2;slot++){
@@ -134,28 +258,31 @@ function personalizeWeek(basePlan, diet, selected){
       const isBreakfast=slot===0;
       const candidates=pool.filter(meal=>{
         if(used.has(meal)) return false;
-        const breakfastLike=/oat|egg|yogurt|toast|pancake|fruit|granola|cottage|avocado|protein oats|french toast/i.test(meal);
+        const breakfastLike=/oat|egg|yogurt|toast|pancake|fruit|granola|cottage|avocado|chia|overnight/i.test(meal);
         return isBreakfast ? breakfastLike : !breakfastLike;
       });
+
       let best=baseMeal;
       let bestScore=-Infinity;
       candidates.forEach(meal=>{
         let score=scoreMealForPreferences(meal,selected);
-        if(meal===baseMeal) score+=6;
-        if((plans[diet] || []).flat().includes(meal)) score+=4;
+        selected.forEach(item=>{
+          if(mealUsesPreference(meal,item) && !covered.has(item)) score += 20;
+        });
+        if(meal===baseMeal) score+=2;
+        if((plans[diet] || []).flat().includes(meal)) score+=3;
         if(score>bestScore){bestScore=score;best=meal;}
       });
+
       dayMeals.push(best);
       used.add(best);
+      selected.forEach(item=>{ if(mealUsesPreference(best,item)) covered.add(item); });
     }
     chosen.push(dayMeals);
   }
 
   return chosen;
 }
-
-
-
 const groceryRules=[
   {pattern:/oatmeal|overnight oats|protein oats|oat/i,items:["Oats"]},
   {pattern:/banana/i,items:["Bananas"]},
@@ -172,6 +299,7 @@ const groceryRules=[
   {pattern:/avocado/i,items:["Avocado"]},
   {pattern:/spinach/i,items:["Spinach"]},
   {pattern:/tomato/i,items:["Tomatoes"]},
+  {pattern:/chees|cheese/i,items:["Cheese"]},
   {pattern:/chicken/i,items:["Chicken breast"]},
   {pattern:/turkey|beef/i,items:["Ground turkey/beef"]},
   {pattern:/tuna/i,items:["Tuna"]},
@@ -181,7 +309,7 @@ const groceryRules=[
   {pattern:/lentil/i,items:["Lentils"]},
   {pattern:/black bean/i,items:["Black beans"]},
   {pattern:/bean/i,items:["Beans"]},
-  {pattern:/rice|grain bowl|bowl/i,items:["Rice"]},
+  {pattern:/rice|grain bowl/i,items:["Rice"]},
   {pattern:/quinoa/i,items:["Quinoa"]},
   {pattern:/pasta/i,items:["Pasta"]},
   {pattern:/taco|wrap|quesadilla|tortilla|lettuce taco/i,items:["Tortillas"]},
