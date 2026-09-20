@@ -472,7 +472,7 @@ function optimizeWeekForBudget(){
         if(!meta) return;
         const candidates=healthyMealsByType[meta.type||["breakfast","lunch","dinner"][mealIndex]]
           .filter(candidate=>candidate.name!==meal)
-          .filter(candidate=>!isMealExcluded(candidate.name,exclusions))
+          .filter(candidate=>isMealCompatible(candidate.name,diet,exclusions))
           .filter(candidate=>!currentWeek.flat().includes(candidate.name))
           .filter(candidate=>(candidate.cost||2)<(meta.cost||2));
         candidates.forEach(candidate=>{
