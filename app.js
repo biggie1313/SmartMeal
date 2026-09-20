@@ -1094,22 +1094,129 @@ function groceryBannerLabel(value){
 function renderGroceryPriceComparison(){
   const box=document.getElementById("grocery-price-comparison");
   if(!box) return;
-  const cityOptions=groceryPriceCities.map(city=>"<option value=\""+escapeHtml(city)+"\""+(city===groceryPriceCity?" selected":"")+">"+escapeHtml(city)+"</option>").join("");
+  box.innerHTML="";
+  
+  const head=document.createElement("div");
+  head.className="price-compare-head";
+  const titleWrap=document.createElement("div");
+  const title=document.createElement("strong");
+  title.textContent=groceryItemPriceRows.length ? "Item-level grocery prices" : "Grocery market benchmark";
+  const subtitle=document.createElement("span");
+  subtitle.textContent=groceryItemPriceRows.length
+    ? "Current published shelf-price observations for "+groceryPriceCity+"."
+    : "Latest published market-basket data for "+groceryPriceCity+".";
+  titleWrap.append(title,subtitle);
+  
+  const controls=document.createElement("div");
+  controls.className="price-compare-controls";
+  const cityLabel=document.createElement("label");
+  cityLabel.textContent="City";
+  const citySelect=document.createElement("select");
+  citySelect.id="grocery-price-city";
+  groceryPriceCities.forEach(city=>{
+    const option=document.createElement("option");
+    option.value=city;
+    option.textContent=city;
+    option.selected=city===groceryPriceCity;
+    citySelect.appendChild(option);
+  });
+  cityLabel.appendChild(citySelect);
+  const refresh=document.createElement("button");
+  refresh.type="button";
+  refresh.className="btn outline small";
+  refresh.textContent="↻ Refresh";
+  controls.append(cityLabel,refresh);
+  head.append(titleWrap,controls);
+  box.appendChild(head);
+
+  citySelect.addEventListener("change",()=>changeGroceryPriceCity(citySelect.value));
+  refresh.addEventListener("click",loadGroceryPriceComparison);
 
   if(groceryItemPriceRows.length){
     const matched=groceryItemPriceRows.filter(row=>row.matched && Array.isArray(row.prices) && row.prices.length);
-    const rows=matched.slice(0,12);
-    const extra=matched.length>rows.length ? "<small class=\"price-source-note\">Showing the first "+rows.length+" matched items here; the price service returned "+matched.length+" matched items.</small>" : "";
-    box.innerHTML="<div class=\"price-compare-head\"><div><strong>Item-level grocery prices</strong><span>Current published shelf-price observations for "+escapeHtml(groceryPriceCity)+".</span></div><div class=\"price-compare-controls\"><label>City<select id=\"grocery-price-city\" onchange=\"changeGroceryPriceCity(this.value)\">"+cityOptions+"</select></label><button type=\"button\" class=\"btn outline small\" onclick=\"loadGroceryPriceComparison()\">↻ Refresh</button></div></div>"+
-      (rows.length ? "<div class=\"item-price-list\">"+rows.map(row=>"<article class=\"item-price-row\"><div class=\"item-price-title\"><strong>"+escapeHtml(row.item)+"</strong><small>"+escapeHtml(row.matched_product||"Matched catalog item")+"</small></div><div class=\"item-price-stores\">"+row.prices.slice(0,3).map((price,index)=>"<div class=\"item-price-store"+(index===0?" lowest":"")+""><span>"+escapeHtml(price.retailer_name)+"</span><b>$"+Number(price.price).toFixed(2)+"</b>"+(price.on_sale?"<em>sale</em>":"")+"</div>").join("")+"</div></article>").join("")+"</div>"+extra+"<small class=\"price-source-note\">Price basis: GroceryPulse effective shelf price. Package sizes and stock can vary by retailer; compare like-for-like package sizes before buying. Walmart and Costco are not covered by this panel.</small>" : "<div class=\"price-compare-empty\">No item-level matches were returned for this week's groceries.</div>");
+    if(!matched.length){
+      const empty=document.createElement("div");
+      empty.className="price-compare-empty";
+      empty.innerHTML="<strong>No item-level matches were returned.</strong><span>SmartMeal's grocery list is still available.</span>";
+      box.appendChild(empty);
+      return;
+    }
+    const list=document.createElement("div");
+    list.className="item-price-list";
+    matched.slice(0,12).forEach(row=>{
+      const article=document.createElement("article");
+      article.className="item-price-row";
+      const info=document.createElement("div");
+      info.className="item-price-title";
+      const name=document.createElement("strong");
+      name.textContent=row.item;
+      const matchedName=document.createElement("small");
+      matchedName.textContent=row.matched_product || "Matched catalog item";
+      info.append(name,matchedName);
+      const stores=document.createElement("div");
+      stores.className="item-price-stores";
+      row.prices.slice(0,3).forEach((price,index)=>{
+        const store=document.createElement("div");
+        store.className="item-price-store"+(index===0 ? " lowest" : "");
+        const storeName=document.createElement("span");
+        storeName.textContent=price.retailer_name || price.banner || "Store";
+        const amount=document.createElement("b");
+        amount.textContent="$"+Number(price.price).toFixed(2);
+        store.append(storeName,amount);
+        if(price.on_sale){
+          const sale=document.createElement("em");
+          sale.textContent="sale";
+          store.appendChild(sale);
+        }
+        stores.appendChild(store);
+      });
+      article.append(info,stores);
+      list.appendChild(article);
+    });
+    box.appendChild(list);
+    if(matched.length>12){
+      const extra=document.createElement("small");
+      extra.className="price-source-note";
+      extra.textContent="Showing 12 matched items. The price service returned "+matched.length+" matches.";
+      box.appendChild(extra);
+    }
+    const note=document.createElement("small");
+    note.className="price-source-note";
+    note.textContent="Price basis: GroceryPulse effective shelf price. Package sizes and stock can vary by retailer; compare like-for-like package sizes before buying. Walmart and Costco are not covered by this panel.";
+    box.appendChild(note);
     return;
   }
 
   const usable=groceryPriceRows.filter(row=>typeof row.basket_cost_cad==="number");
-  const sorted=[...usable].sort((a,b)=>a.basket_cost_cad-b.basket_cost_cad);
-  const rows=sorted.slice(0,6);
-  box.innerHTML="<div class=\"price-compare-head\"><div><strong>Grocery market benchmark</strong><span>Latest published market-basket data for "+escapeHtml(groceryPriceCity)+".</span></div><div class=\"price-compare-controls\"><label>City<select id=\"grocery-price-city\" onchange=\"changeGroceryPriceCity(this.value)\">"+cityOptions+"</select></label><button type=\"button\" class=\"btn outline small\" onclick=\"loadGroceryPriceComparison()\">↻ Refresh</button></div></div>"+
-    (rows.length ? "<div class=\"price-compare-grid\">"+rows.map(row=>"<div class=\"price-store\"><div><strong>"+escapeHtml(groceryBannerLabel(row.retailer))+"</strong><small>Market basket benchmark</small></div><b>$"+Number(row.basket_cost_cad).toFixed(2)+"</b></div>").join("")+"</div><small class=\"price-source-note\">Aggregate benchmark only: this is GroceryPulse's overall market-basket cost, not the exact total of your SmartMeal cart.</small>" : "<div class=\"price-compare-empty\"><strong>No market benchmark is available right now.</strong><span>SmartMeal's grocery list is still available.</span></div>");
+  const sorted=[...usable].sort((a,b)=>a.basket_cost_cad-b.basket_cost_cad).slice(0,6);
+  if(!sorted.length){
+    const empty=document.createElement("div");
+    empty.className="price-compare-empty";
+    empty.innerHTML="<strong>No market benchmark is available right now.</strong><span>SmartMeal's grocery list is still available.</span>";
+    box.appendChild(empty);
+    return;
+  }
+  const grid=document.createElement("div");
+  grid.className="price-compare-grid";
+  sorted.forEach(row=>{
+    const card=document.createElement("div");
+    card.className="price-store";
+    const wrap=document.createElement("div");
+    const name=document.createElement("strong");
+    name.textContent=groceryBannerLabel(row.retailer);
+    const label=document.createElement("small");
+    label.textContent="Market basket benchmark";
+    wrap.append(name,label);
+    const amount=document.createElement("b");
+    amount.textContent="$"+Number(row.basket_cost_cad).toFixed(2);
+    card.append(wrap,amount);
+    grid.appendChild(card);
+  });
+  box.appendChild(grid);
+  const note=document.createElement("small");
+  note.className="price-source-note";
+  note.textContent="Aggregate benchmark only: this is GroceryPulse's overall market-basket cost, not the exact total of your SmartMeal cart.";
+  box.appendChild(note);
 }
 
 async function loadGroceryPriceComparison(){
