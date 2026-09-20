@@ -399,17 +399,91 @@ function ingredientsForMeal(meal){
   return found;
 }
 
-function buildGroceryList(week){
+const groceryMeta={
+  "Oats":{category:"Pantry & grains",unit:"cups",perPerson:0.5},
+  "Bananas":{category:"Produce",unit:"each",perPerson:1},
+  "Berries":{category:"Produce",unit:"cups",perPerson:0.75},
+  "Greek yogurt":{category:"Dairy & alternatives",unit:"cups",perPerson:0.75},
+  "Eggs":{category:"Protein",unit:"eggs",perPerson:2},
+  "Avocado":{category:"Produce",unit:"each",perPerson:0.5},
+  "Apples":{category:"Produce",unit:"each",perPerson:1},
+  "Peanut butter":{category:"Pantry & grains",unit:"tbsp",perPerson:2},
+  "Chia seeds":{category:"Pantry & grains",unit:"tbsp",perPerson:1},
+  "Whole-grain bread":{category:"Pantry & grains",unit:"slices",perPerson:2},
+  "Almonds":{category:"Pantry & grains",unit:"oz",perPerson:1},
+  "Walnuts":{category:"Pantry & grains",unit:"oz",perPerson:1},
+  "Pumpkin seeds":{category:"Pantry & grains",unit:"oz",perPerson:1},
+  "Spinach":{category:"Produce",unit:"cups",perPerson:1},
+  "Tomatoes":{category:"Produce",unit:"cups",perPerson:0.5},
+  "Broccoli":{category:"Produce",unit:"cups",perPerson:1},
+  "Carrots":{category:"Produce",unit:"cups",perPerson:0.5},
+  "Mixed vegetables":{category:"Produce",unit:"cups",perPerson:1},
+  "Sweet potatoes":{category:"Produce",unit:"each",perPerson:1},
+  "Chicken breast":{category:"Protein",unit:"oz",perPerson:6},
+  "Turkey":{category:"Protein",unit:"oz",perPerson:5},
+  "Salmon":{category:"Protein",unit:"oz",perPerson:6},
+  "Tuna":{category:"Protein",unit:"oz",perPerson:5},
+  "Shrimp":{category:"Protein",unit:"oz",perPerson:6},
+  "Tofu":{category:"Protein",unit:"oz",perPerson:5},
+  "Chickpeas":{category:"Protein & beans",unit:"cups",perPerson:0.75},
+  "Lentils":{category:"Protein & beans",unit:"cups",perPerson:0.75},
+  "Black beans":{category:"Protein & beans",unit:"cups",perPerson:0.75},
+  "Beans":{category:"Protein & beans",unit:"cups",perPerson:0.75},
+  "Hummus":{category:"Pantry & grains",unit:"tbsp",perPerson:3},
+  "Brown rice":{category:"Pantry & grains",unit:"cups cooked",perPerson:0.75},
+  "Quinoa":{category:"Pantry & grains",unit:"cups cooked",perPerson:0.75},
+  "Whole-grain tortillas":{category:"Pantry & grains",unit:"each",perPerson:1},
+  "Olive oil":{category:"Pantry & grains",unit:"tbsp",perPerson:1}
+};
+
+function groceryBudgetLabel(budget){
+  return budget==="tight" ? "$50–$70" : budget==="low" ? "$70–$90" : budget==="mid" ? "$90–$120" : budget==="high" ? "$120–$160" : "$160+";
+}
+
+function formatGroceryQuantity(value,unit){
+  const rounded=Math.round(value*10)/10;
+  const shown=Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(1);
+  return shown+" "+unit;
+}
+
+function buildGroceryList(week,people=4,budget="mid"){
   const map=new Map();
+  const servingCount=Number(people)||4;
+
   week.flat().forEach(meal=>{
     ingredientsForMeal(meal).forEach(item=>{
-      if(!map.has(item)) map.set(item,new Set());
-      map.get(item).add(meal);
+      const meta=groceryMeta[item] || {category:"Other",unit:"each",perPerson:1};
+      if(!map.has(item)) map.set(item,{item,category:meta.category,unit:meta.unit,perPerson:meta.perPerson,count:0,meals:new Set()});
+      const entry=map.get(item);
+      entry.count += 1;
+      entry.meals.add(meal);
     });
   });
-  currentGroceries=Array.from(map.entries()).map(([item,meals])=>({item,meals:Array.from(meals)})).sort((a,b)=>a.item.localeCompare(b.item));
+
+  currentGroceries=Array.from(map.values())
+    .map(entry=>({
+      item:entry.item,
+      category:entry.category,
+      quantity:formatGroceryQuantity(entry.count*entry.perPerson*servingCount,entry.unit),
+      meals:Array.from(entry.meals),
+      servings:entry.count*servingCount
+    }))
+    .sort((a,b)=>a.category.localeCompare(b.category)||a.item.localeCompare(b.item));
+
   return currentGroceries;
 }
+
+const groceryCategoryOrder=["Produce","Protein","Protein & beans","Dairy & alternatives","Pantry & grains","Other"];
+
+function groceryCategories(items){
+  const groups=new Map(groceryCategoryOrder.map(category=>[category,[]]));
+  items.forEach(item=>{
+    if(!groups.has(item.category)) groups.set(item.category,[]);
+    groups.get(item.category).push(item);
+  });
+  return Array.from(groups.entries()).filter(([,entries])=>entries.length);
+}
+
 const substitutions={
   "Chicken rice bowls":["Turkey rice bowls","Tofu rice bowls","Chicken quinoa bowls"],
   "Turkey tacos":["Chicken tacos","Black bean tacos","Turkey lettuce tacos"],
@@ -577,7 +651,7 @@ function generate(){
       `<div class="day"><b>${days[i]}</b>${d.map((m,slot)=>
         `<div class="meal-slot"><span class="meal-type">${mealTypes[slot]}</span><button type="button" class="meal" data-meal="${escapeHtml(m)}">${escapeHtml(m)}${isPremium ? " ☆" : ""}</button></div>`
       ).join("")}</div>`).join("")}</div>
-    ${renderGroceryList(buildGroceryList(currentWeek))}`;
+    ${renderGroceryList(buildGroceryList(currentWeek,people,budget),people,budget)}`;
   enhancePlannerControls();
 }
 async function saveCurrentPlan(){
@@ -690,25 +764,24 @@ function enhancePlannerControls(){
   });
 }
 
-function renderGroceryList(list){
+function renderGroceryList(list,people=Number(document.getElementById("people")?.value)||4,budget=document.getElementById("budget")?.value||"mid"){
   const items=list || [];
   if(!items.length) return "<div class=\"grocery-empty\">No grocery items found for this week yet.</div>";
   const checked=groceryChecks();
-  return `
-    <div class="grocery-header">
-      <div><strong>Your grocery list</strong><span>${items.length} ingredients based on the meals above</span></div>
-      <span class="grocery-count">${items.length} items</span>
-    </div>
-    <div class="groceries">
-      ${items.map(entry=>`
-        <div class="gitem" data-grocery-name="${escapeHtml(entry.item)}">
-          <input type="checkbox" ${checked[entry.item] === true ? "checked" : ""}>
-          <div class="grocery-copy">
-            <span class="grocery-name">${escapeHtml(entry.item)}</span>
-            <small>Used in: ${escapeHtml(entry.meals.slice(0,3).join(" · "))}${entry.meals.length>3 ? " · +" + (entry.meals.length-3) + " more" : ""}</small>
-          </div>
-        </div>`).join("")}
-    </div>`;
+  const categories=groceryCategories(items);
+  const categoryHtml=categories.map(([category,entries])=>{
+    return "<section class=\"grocery-category\"><div class=\"grocery-category-head\"><h4>"+escapeHtml(category)+"</h4><span>"+entries.length+" item"+(entries.length===1?"":"s")+"</span></div><div class=\"groceries\">"+
+      entries.map(entry=>"<div class=\"gitem\" data-grocery-name=\""+escapeHtml(entry.item)+"\"><input type=\"checkbox\" data-grocery-name=\""+escapeHtml(entry.item)+"\""+(checked[entry.item]===true?" checked":"")+" onchange=\"updateGroceryProgress()\"><div class=\"grocery-copy\"><div class=\"grocery-name-row\"><span class=\"grocery-name\">"+escapeHtml(entry.item)+"</span><strong class=\"grocery-qty\">"+escapeHtml(entry.quantity)+"</strong></div><small>Used in "+entry.meals.length+" meal"+(entry.meals.length===1?"":"s")+": "+escapeHtml(entry.meals.slice(0,3).join(" · "))+(entry.meals.length>3?" · +"+(entry.meals.length-3)+" more":"")+"</small></div></div>").join("")+
+      "</div></section>";
+  }).join("");
+
+  return "<div class=\"grocery-area\">"+
+    "<div class=\"grocery-header\"><div><strong>Your weekly shopping list</strong><span>"+items.length+" ingredients for "+people+" "+(people===1?"person":"people")+" · scaled from your 21 meals</span></div><span class=\"grocery-count\">"+people+" "+(people===1?"person":"people")+"</span></div>"+
+    "<div class=\"grocery-budget-note\"><strong>Budget target:</strong> "+escapeHtml(groceryBudgetLabel(budget))+" · quantities are scaled to your household size.</div>"+
+    "<div class=\"grocery-progress\"><div class=\"grocery-progress-top\"><span class=\"grocery-progress-status\">"+items.length+" items left to shop</span><span class=\"grocery-progress-count\">0 / "+items.length+" checked</span></div><div class=\"grocery-progress-bar\"><span></span></div></div>"+
+    "<div class=\"grocery-actions\"><button type=\"button\" class=\"btn outline small\" onclick=\"clearCheckedGroceries()\">Clear checked</button><button type=\"button\" class=\"btn outline small\" onclick=\"printGroceryList()\">Print list</button></div>"+
+    categoryHtml+
+    "</div>";
 }
 function updateFavoriteButtons(){
   document.querySelectorAll(".meal-favorite").forEach(button => {
@@ -812,7 +885,7 @@ function swapMeal(dayIndex, mealIndex){
     const favorite = button.parentElement?.querySelector(".meal-favorite");
     if (favorite) { favorite.dataset.favoriteMeal = next; favorite.textContent = favoriteMeals.has(next) ? "★" : "☆"; }
   }
-  showToast("Meal swapped to " + next + ".");
+  const people=Number(document.getElementById("people")?.value)||4; const budget=document.getElementById("budget")?.value||"mid"; const groceryArea=document.querySelector("#result .grocery-area"); if(groceryArea){ const fresh=document.createElement("div"); fresh.innerHTML=renderGroceryList(buildGroceryList(currentWeek,people,budget),people,budget); groceryArea.replaceWith(fresh.firstElementChild); enhancePlannerControls(); } showToast("Meal swapped to " + next + ". Grocery list updated.");
 }
 
 
@@ -1461,6 +1534,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const checks = groceryChecks();
     checks[checkbox.dataset.groceryName] = checkbox.checked;
     localStorage.setItem(groceryStorageKey(), JSON.stringify(checks));
+    updateGroceryProgress();
   });
 
   const observer = new MutationObserver(() => enhancePlannerControls());
