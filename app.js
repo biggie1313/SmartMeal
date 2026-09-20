@@ -441,6 +441,23 @@ function groceryBudgetLabel(budget){
   return budget==="tight" ? "$50–$70" : budget==="low" ? "$70–$90" : budget==="mid" ? "$90–$120" : budget==="high" ? "$120–$160" : "$160+";
 }
 
+function estimateWeeklySpend(week,people=4){
+  const perPersonMealCost={1:4,2:6,3:8};
+  const total=week.flat().reduce((sum,meal)=>{
+    const tier=mealMetaMap[meal]?.cost || 2;
+    return sum + (perPersonMealCost[tier] || 6);
+  },0)*Number(people||4);
+  const rounded=Math.round(total/5)*5;
+  return {low:Math.max(25,Math.round(rounded*0.85/5)*5),high:Math.round(rounded*1.15/5)*5};
+}
+function groceryBudgetStatus(estimate,budget){
+  const caps={tight:70,low:90,mid:120,high:160,premium:9999};
+  const cap=caps[budget] || 120;
+  if(estimate.high<=cap) return {label:"On budget",detail:"Your meal mix is within the selected weekly range based on SmartMeal's planning estimate.",tone:"good"};
+  if(estimate.low<=cap) return {label:"Near your budget",detail:"The plan may fit with normal package-size and store-price variation.",tone:"near"};
+  return {label:"Above your target",detail:"Consider a lower-cost meal style or swap a few meals to bring the estimate down.",tone:"over"};
+}
+
 function formatGroceryQuantity(value,unit){
   const rounded=Math.round(value*10)/10;
   const clean=Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(1);
@@ -1181,6 +1198,8 @@ function renderGroceryList(list,people=Number(document.getElementById("people")?
   const items=list || [];
   if(!items.length) return "<div class=\"grocery-empty\">No grocery items found for this week yet.</div>";
   const checked=groceryChecks();
+  const estimate=estimateWeeklySpend(currentWeek,people);
+  const budgetStatus=groceryBudgetStatus(estimate,budget);
   const categories=groceryCategories(items);
   const categoryOptions=categories.map(([category])=>"<option value=\""+escapeHtml(category)+"\">"+escapeHtml(category)+"</option>").join("");
   const categoryHtml=categories.map(([category,entries])=>{
@@ -1192,6 +1211,7 @@ function renderGroceryList(list,people=Number(document.getElementById("people")?
   return "<div class=\"grocery-area\">"+
     "<div class=\"grocery-header\"><div><strong>Your weekly shopping list</strong><span>"+items.length+" ingredients for "+people+" "+(people===1?"person":"people")+" · scaled from your 21 meals</span></div><span class=\"grocery-count\">"+people+" "+(people===1?"person":"people")+"</span></div>"+
     "<div class=\"grocery-budget-note\"><strong>Budget target:</strong> "+escapeHtml(groceryBudgetLabel(budget))+" · quantities are scaled to your household size. <span>These are planning estimates, not exact package sizes.</span></div>"+
+    "<div class=\"grocery-budget-status "+budgetStatus.tone+"\"><div><strong>"+escapeHtml(budgetStatus.label)+"</strong><span>"+escapeHtml(budgetStatus.detail)+"</span></div><b>~$"+estimate.low+"–$"+estimate.high+"</b></div>"+
     "<div class=\"grocery-progress\"><div class=\"grocery-progress-top\"><span class=\"grocery-progress-status\">"+items.length+" items left to shop</span><span class=\"grocery-progress-count\">0 / "+items.length+" checked</span></div><div class=\"grocery-progress-bar\"><span></span></div></div>"+
     "<div class=\"grocery-filterbar\"><label><span>Find an item</span><input class=\"grocery-search\" type=\"search\" placeholder=\"Search chicken, rice, berries…\" oninput=\"filterGroceryList()\"></label><label><span>Category</span><select class=\"grocery-category-filter\" onchange=\"filterGroceryList()\"><option value=\"all\">All categories</option>"+categoryOptions+"</select></label></div>"+
     "<div class=\"grocery-actions\"><button type=\"button\" class=\"btn outline small\" onclick=\"openShoppingMode()\">🛒 Shopping mode</button><button type=\"button\" class=\"btn outline small\" onclick=\"checkAllVisibleGroceries()\">✓ Check visible</button><button type=\"button\" class=\"btn outline small\" onclick=\"clearCheckedGroceries()\">Clear checked</button><button type=\"button\" class=\"btn outline small\" onclick=\"copyGroceryList()\">Copy list</button><button type=\"button\" class=\"btn outline small\" onclick=\"printGroceryList()\">Print list</button></div>"+
