@@ -95,6 +95,7 @@ const exclusionFoodMap={
 let dietaryExclusions = new Set();
 let currentGroceries=[];
 let preferredGroceries = new Set();
+let shoppingModeQuery="";
 
 const healthyMealLibrary=[
   {type:"breakfast",name:"Berry oatmeal bowl",foods:["Oats","Berries","Greek yogurt","Pumpkin seeds"],cost:1,tags:["fiber"]},
@@ -990,6 +991,71 @@ function groceryChecks(){
 }
 
 function updateGroceryProgress(){const area=document.querySelector('#result .grocery-area');if(!area)return;const boxes=Array.from(area.querySelectorAll('input[data-grocery-name]'));const checked=boxes.filter(b=>b.checked).length;const total=boxes.length;const count=area.querySelector('.grocery-progress-count');const status=area.querySelector('.grocery-progress-status');if(count)count.textContent=checked+' / '+total+' checked';if(status)status.textContent=checked===total&&total?'Shopping list complete':Math.max(0,total-checked)+' item'+(Math.max(0,total-checked)===1?'':'s')+' left to shop';}
+function openShoppingMode(){
+  if(!currentGroceries.length){
+    showToast("Generate a plan first.");
+    return;
+  }
+  shoppingModeQuery="";
+  const modal=document.getElementById("shopping-modal");
+  if(!modal) return;
+  renderShoppingModeList();
+  modal.classList.add("open");
+  modal.setAttribute("aria-hidden","false");
+  setTimeout(()=>document.querySelector("#shopping-modal .shopping-search")?.focus(),50);
+}
+function closeShoppingMode(){
+  const modal=document.getElementById("shopping-modal");
+  if(!modal) return;
+  modal.classList.remove("open");
+  modal.setAttribute("aria-hidden","true");
+}
+function renderShoppingModeList(){
+  const modal=document.getElementById("shopping-modal");
+  const list=document.getElementById("shopping-mode-list");
+  const count=document.getElementById("shopping-mode-count");
+  const status=document.getElementById("shopping-mode-status");
+  if(!modal || !list) return;
+  const query=shoppingModeQuery.toLowerCase();
+  const checks=groceryChecks();
+  const filtered=currentGroceries.filter(entry=>!query || entry.item.toLowerCase().includes(query));
+  list.innerHTML=filtered.length ? filtered.map(entry=>{
+    const mealText=entry.meals.slice(0,2).join(" · ");
+    return "<label class=\"shopping-row\"><input type=\"checkbox\" data-shopping-name=\""+escapeHtml(entry.item)+"\""+(checks[entry.item]===true?" checked":"")+"><span><strong>"+escapeHtml(entry.item)+"</strong><small>"+escapeHtml(entry.quantity)+" · "+escapeHtml(mealText)+(entry.meals.length>2?" · +"+(entry.meals.length-2)+" more":"")+"</small></span></label>";
+  }).join("") : "<div class=\"shopping-empty\">No items match your search.</div>";
+  const total=currentGroceries.length;
+  const checked=currentGroceries.filter(entry=>checks[entry.item]===true).length;
+  if(count) count.textContent=checked+" / "+total+" checked";
+  if(status) status.textContent=checked===total&&total ? "Shopping list complete" : (total-checked)+" item"+(total-checked===1?"":"s")+" left";
+}
+function updateShoppingModeProgress(){
+  const checks=groceryChecks();
+  const checked=currentGroceries.filter(entry=>checks[entry.item]===true).length;
+  const total=currentGroceries.length;
+  const count=document.getElementById("shopping-mode-count");
+  const status=document.getElementById("shopping-mode-status");
+  if(count) count.textContent=checked+" / "+total+" checked";
+  if(status) status.textContent=checked===total&&total ? "Shopping list complete" : (total-checked)+" item"+(total-checked===1?"":"s")+" left";
+  updateGroceryProgress();
+}
+function checkAllShoppingItems(){
+  const checks=groceryChecks();
+  currentGroceries.forEach(entry=>{checks[entry.item]=true;});
+  localStorage.setItem(groceryStorageKey(),JSON.stringify(checks));
+  document.querySelectorAll("#result input[data-grocery-name]").forEach(box=>{box.checked=true;});
+  renderShoppingModeList();
+  showToast("All shopping items marked as checked.");
+}
+function syncMainGroceryItem(name,checked){
+  const checks=groceryChecks();
+  checks[name]=checked;
+  localStorage.setItem(groceryStorageKey(),JSON.stringify(checks));
+  document.querySelectorAll("#result input[data-grocery-name]").forEach(box=>{
+    if(box.dataset.groceryName===name) box.checked=checked;
+  });
+  updateShoppingModeProgress();
+}
+
 function clearCheckedGroceries(){
   const checks=groceryChecks();
   document.querySelectorAll('#result input[data-grocery-name]').forEach(b=>{b.checked=false;checks[b.dataset.groceryName]=false;});
@@ -1128,7 +1194,7 @@ function renderGroceryList(list,people=Number(document.getElementById("people")?
     "<div class=\"grocery-budget-note\"><strong>Budget target:</strong> "+escapeHtml(groceryBudgetLabel(budget))+" · quantities are scaled to your household size. <span>These are planning estimates, not exact package sizes.</span></div>"+
     "<div class=\"grocery-progress\"><div class=\"grocery-progress-top\"><span class=\"grocery-progress-status\">"+items.length+" items left to shop</span><span class=\"grocery-progress-count\">0 / "+items.length+" checked</span></div><div class=\"grocery-progress-bar\"><span></span></div></div>"+
     "<div class=\"grocery-filterbar\"><label><span>Find an item</span><input class=\"grocery-search\" type=\"search\" placeholder=\"Search chicken, rice, berries…\" oninput=\"filterGroceryList()\"></label><label><span>Category</span><select class=\"grocery-category-filter\" onchange=\"filterGroceryList()\"><option value=\"all\">All categories</option>"+categoryOptions+"</select></label></div>"+
-    "<div class=\"grocery-actions\"><button type=\"button\" class=\"btn outline small\" onclick=\"checkAllVisibleGroceries()\">✓ Check visible</button><button type=\"button\" class=\"btn outline small\" onclick=\"clearCheckedGroceries()\">Clear checked</button><button type=\"button\" class=\"btn outline small\" onclick=\"copyGroceryList()\">Copy list</button><button type=\"button\" class=\"btn outline small\" onclick=\"printGroceryList()\">Print list</button></div>"+
+    "<div class=\"grocery-actions\"><button type=\"button\" class=\"btn outline small\" onclick=\"openShoppingMode()\">🛒 Shopping mode</button><button type=\"button\" class=\"btn outline small\" onclick=\"checkAllVisibleGroceries()\">✓ Check visible</button><button type=\"button\" class=\"btn outline small\" onclick=\"clearCheckedGroceries()\">Clear checked</button><button type=\"button\" class=\"btn outline small\" onclick=\"copyGroceryList()\">Copy list</button><button type=\"button\" class=\"btn outline small\" onclick=\"printGroceryList()\">Print list</button></div>"+
     "<div class=\"grocery-filter-empty\" style=\"display:none\">No grocery items match that search.</div>"+
     categoryHtml+
     "</div>";
@@ -1903,6 +1969,22 @@ supabaseClient.auth.onAuthStateChange((event, session) => {
 document.addEventListener("DOMContentLoaded", () => {
   refreshPremiumStatus();
 
+  const shoppingModal=document.getElementById("shopping-modal");
+  if(shoppingModal){
+    shoppingModal.addEventListener("click",(event)=>{
+      if(event.target.matches("[data-shopping-close]") || event.target===shoppingModal) closeShoppingMode();
+    });
+    shoppingModal.addEventListener("input",(event)=>{
+      const input=event.target.closest(".shopping-search");
+      if(!input) return;
+      shoppingModeQuery=input.value;
+      renderShoppingModeList();
+    });
+    shoppingModal.addEventListener("change",(event)=>{
+      const box=event.target.closest("[data-shopping-name]");
+      if(box) syncMainGroceryItem(box.dataset.shoppingName,box.checked);
+    });
+  }
   const recipeModal=document.getElementById("recipe-modal");
   if(recipeModal){
     recipeModal.addEventListener("click",(event)=>{
