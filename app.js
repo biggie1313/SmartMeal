@@ -82,6 +82,17 @@ const healthyFoodChoices=[
   "Lentils","Black beans","Hummus","Almonds","Walnuts","Pumpkin seeds","Olive oil","Beans","Whole-grain tortillas"
 ];
 const groceryCatalog=[...healthyFoodChoices];
+const dietaryExclusionChoices=["Dairy","Eggs","Gluten","Nuts","Seafood","Soy","Poultry"];
+const exclusionFoodMap={
+  "Dairy":["Greek yogurt"],
+  "Eggs":["Eggs"],
+  "Gluten":["Whole-grain bread","Whole-grain tortillas"],
+  "Nuts":["Almonds","Walnuts","Peanut butter","Pumpkin seeds"],
+  "Seafood":["Salmon","Tuna","Shrimp"],
+  "Soy":["Tofu"],
+  "Poultry":["Chicken breast","Turkey"]
+};
+let dietaryExclusions = new Set();
 let currentGroceries=[];
 let preferredGroceries = new Set();
 
@@ -145,53 +156,96 @@ healthyFoodChoices.forEach(food=>{
 function preferredGroceriesStorageKey(){
   return currentUserId ? "smartmeal:preferred-groceries:" + currentUserId : "smartmeal:preferred-groceries";
 }
-
+function dietaryExclusionsStorageKey(){
+  return currentUserId ? "smartmeal:dietary-exclusions:" + currentUserId : "smartmeal:dietary-exclusions";
+}
+function foodIsExcluded(food, exclusions){
+  return exclusions.some(exclusion => (exclusionFoodMap[exclusion] || []).includes(food));
+}
 function loadPreferredGroceries(){
   try{
     const saved=JSON.parse(localStorage.getItem(preferredGroceriesStorageKey()) || "[]");
-    preferredGroceries = new Set(saved.filter(item=>healthyFoodChoices.includes(item)));
-  }catch{
-    preferredGroceries = new Set();
-  }
+    preferredGroceries = new Set(saved.filter(item=>healthyFoodChoices.includes(item) && !foodIsExcluded(item,selectedDietaryExclusions())));
+  }catch{ preferredGroceries = new Set(); }
   document.querySelectorAll("[data-preferred-grocery]").forEach(box=>{
     box.checked = preferredGroceries.has(box.dataset.preferredGrocery);
   });
   updatePreferredGroceryCount();
 }
-
-function selectedPreferredGroceries(){
-  return [...new Set(Array.from(document.querySelectorAll("[data-preferred-grocery]:checked")).map(box=>box.dataset.preferredGrocery))].slice(0,12);
+function loadDietaryExclusions(){
+  try{
+    const saved=JSON.parse(localStorage.getItem(dietaryExclusionsStorageKey()) || "[]");
+    dietaryExclusions = new Set(saved.filter(item=>dietaryExclusionChoices.includes(item)));
+  }catch{ dietaryExclusions = new Set(); }
+  document.querySelectorAll("[data-dietary-exclusion]").forEach(box=>{
+    box.checked = dietaryExclusions.has(box.dataset.dietaryExclusion);
+  });
+  document.querySelectorAll("[data-preferred-grocery]").forEach(box=>{
+    if(foodIsExcluded(box.dataset.preferredGrocery,selectedDietaryExclusions())) box.checked=false;
+  });
+  preferredGroceries = new Set(selectedPreferredGroceries());
+  updatePreferredGroceryCount();
+  updateDietaryExclusionCount();
 }
-
+function selectedDietaryExclusions(){
+  return Array.from(document.querySelectorAll("[data-dietary-exclusion]:checked")).map(box=>box.dataset.dietaryExclusion);
+}
+function selectedPreferredGroceries(){
+  return [...new Set(Array.from(document.querySelectorAll("[data-preferred-grocery]:checked"))
+    .map(box=>box.dataset.preferredGrocery)
+    .filter(food=>!foodIsExcluded(food,selectedDietaryExclusions())))]
+    .slice(0,12);
+}
 function savePreferredGroceries(){
   preferredGroceries = new Set(selectedPreferredGroceries());
   localStorage.setItem(preferredGroceriesStorageKey(), JSON.stringify(Array.from(preferredGroceries)));
   updatePreferredGroceryCount();
 }
-
+function saveDietaryExclusions(){
+  dietaryExclusions = new Set(selectedDietaryExclusions());
+  document.querySelectorAll("[data-preferred-grocery]").forEach(box=>{
+    if(foodIsExcluded(box.dataset.preferredGrocery,[...dietaryExclusions])) box.checked=false;
+  });
+  preferredGroceries = new Set(selectedPreferredGroceries());
+  localStorage.setItem(dietaryExclusionsStorageKey(), JSON.stringify(Array.from(dietaryExclusions)));
+  localStorage.setItem(preferredGroceriesStorageKey(), JSON.stringify(Array.from(preferredGroceries)));
+  updatePreferredGroceryCount();
+  updateDietaryExclusionCount();
+}
 function updatePreferredGroceryCount(){
   const count=document.getElementById("preferred-grocery-count");
   if(count) count.textContent=selectedPreferredGroceries().length + " / 12";
 }
-
+function updateDietaryExclusionCount(){
+  const count=document.getElementById("dietary-exclusion-count");
+  if(count) count.textContent=selectedDietaryExclusions().length;
+}
 function mealUsesPreference(meal,item){
   const foods=mealFoodMap[meal];
   return Array.isArray(foods) ? foods.includes(item) : false;
 }
-
 function scoreMealForPreferences(meal, selected){
   const foods=mealFoodMap[meal] || [];
   let score=0;
   selected.forEach(item=>{ if(foods.includes(item)) score += 25; });
   return score;
 }
-
-function isMealCompatible(meal, diet){
-  if(diet==="vegetarian" && /(chicken|turkey|salmon|tuna|shrimp)/i.test(meal)) return false;
-  return true;
+function isMealExcluded(meal, exclusions){
+  const foods=mealFoodMap[meal] || [];
+  if(exclusions.includes("Poultry") && foods.some(food=>["Chicken breast","Turkey"].includes(food))) return true;
+  if(exclusions.includes("Dairy") && foods.includes("Greek yogurt")) return true;
+  if(exclusions.includes("Eggs") && foods.includes("Eggs")) return true;
+  if(exclusions.includes("Gluten") && foods.some(food=>["Whole-grain bread","Whole-grain tortillas"].includes(food))) return true;
+  if(exclusions.includes("Nuts") && foods.some(food=>["Almonds","Walnuts","Peanut butter","Pumpkin seeds"].includes(food))) return true;
+  if(exclusions.includes("Seafood") && foods.some(food=>["Salmon","Tuna","Shrimp"].includes(food))) return true;
+  if(exclusions.includes("Soy") && foods.includes("Tofu")) return true;
+  return false;
 }
-
-function personalizeWeek(basePlan, diet, selected){
+function isMealCompatible(meal,diet,exclusions=[]){
+  if(diet==="vegetarian" && /(chicken|turkey|salmon|tuna|shrimp)/i.test(meal)) return false;
+  return !isMealExcluded(meal,exclusions);
+}
+function personalizeWeek(basePlan, diet, selected, exclusions=[]){
   const emptyWeek=Array.from({length:7},()=>[null,null,null]);
   const used=new Set();
   const covered=new Set();
@@ -199,8 +253,8 @@ function personalizeWeek(basePlan, diet, selected){
 
   if(selected.length){
     const orderedSelected=[...selected].sort((a,b)=>{
-      const ac=healthyMealLibrary.filter(meal=>meal.foods.includes(a) && isMealCompatible(meal.name,diet)).length;
-      const bc=healthyMealLibrary.filter(meal=>meal.foods.includes(b) && isMealCompatible(meal.name,diet)).length;
+      const ac=healthyMealLibrary.filter(meal=>meal.foods.includes(a) && isMealCompatible(meal.name,diet,exclusions)).length;
+      const bc=healthyMealLibrary.filter(meal=>meal.foods.includes(b) && isMealCompatible(meal.name,diet,exclusions)).length;
       return ac-bc;
     });
 
@@ -211,7 +265,7 @@ function personalizeWeek(basePlan, diet, selected){
           if(emptyWeek[day][slot]!==null) continue;
           const type=slotTypes[slot];
           healthyMealsByType[type].forEach(meal=>{
-            if(used.has(meal.name) || !isMealCompatible(meal.name,diet) || !meal.foods.includes(item)) return;
+            if(used.has(meal.name) || !isMealCompatible(meal.name,diet,exclusions) || !meal.foods.includes(item)) return;
             const newCoverage=selected.filter(food=>!covered.has(food) && meal.foods.includes(food)).length;
             const score=newCoverage*40 + scoreMealForPreferences(meal.name,selected) + (slot===0 ? 2 : 0) - day;
             possibleSlots.push({day,slot,meal,score});
@@ -233,17 +287,14 @@ function personalizeWeek(basePlan, diet, selected){
       if(emptyWeek[day][slot]) continue;
       const type=slotTypes[slot];
       const baseMeal=basePlan?.[day]?.[slot];
-      const pool=[
-        ...healthyMealsByType[type],
-        ...(baseMeal ? [{name:baseMeal,foods:mealFoodMap[baseMeal]||[]} ] : [])
-      ].filter(meal=>!used.has(meal.name) && isMealCompatible(meal.name,diet));
+      const pool=[...healthyMealsByType[type],...(baseMeal ? [{name:baseMeal,foods:mealFoodMap[baseMeal]||[]}] : [])]
+        .filter(meal=>!used.has(meal.name) && isMealCompatible(meal.name,diet,exclusions));
       pool.sort((a,b)=>scoreMealForPreferences(b.name,selected)-scoreMealForPreferences(a.name,selected));
       const pick=pool[0];
-      emptyWeek[day][slot]=pick ? pick.name : (baseMeal || "Healthy grain & veggie bowl");
+      emptyWeek[day][slot]=pick ? pick.name : "Healthy grain & veggie bowl";
       used.add(emptyWeek[day][slot]);
     }
   }
-
   return emptyWeek;
 }
 
@@ -461,7 +512,8 @@ function generate(){
   if(optimizerCheckbox?.checked && !isPremium) optimizerCheckbox.checked=false;
   if(isPremium && optimizerCheckbox?.checked) targetNote+=" · ingredient reuse optimized";
   const selectedPreferences=selectedPreferredGroceries();
-  currentWeek=personalizeWeek(plan,diet,selectedPreferences);
+  const selectedExclusions=selectedDietaryExclusions();
+  currentWeek=personalizeWeek(plan,diet,selectedPreferences,selectedExclusions);
   const days=["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
   const mealTypes=["Breakfast","Lunch","Dinner"];
   const covered=selectedPreferences.filter(food=>currentWeek.flat().some(meal=>mealUsesPreference(meal,food)));
@@ -505,6 +557,7 @@ async function saveCurrentPlan(){
       nutrition_target: document.getElementById("nutrition-target")?.value || "balanced",
       ingredient_reuse_optimized: document.getElementById("reuse-optimizer")?.checked === true,
       preferred_groceries: selectedPreferredGroceries(),
+      dietary_exclusions: selectedDietaryExclusions(),
       meals: currentWeek.map(day => [...day]),
       html: result.innerHTML
     };
@@ -1054,6 +1107,18 @@ async function restoreSavedPlan(planId){
     });
     updatePreferredGroceryCount();
   }
+  if (Array.isArray(plan.dietary_exclusions)) {
+    dietaryExclusions = new Set(plan.dietary_exclusions.filter(item=>dietaryExclusionChoices.includes(item)));
+    localStorage.setItem(dietaryExclusionsStorageKey(), JSON.stringify(Array.from(dietaryExclusions)));
+    document.querySelectorAll("[data-dietary-exclusion]").forEach(box=>{
+      box.checked = dietaryExclusions.has(box.dataset.dietaryExclusion);
+    });
+    document.querySelectorAll("[data-preferred-grocery]").forEach(box=>{
+      box.checked = selectedPreferredGroceries().includes(box.dataset.preferredGrocery);
+    });
+    updateDietaryExclusionCount();
+    updatePreferredGroceryCount();
+  }
   result.innerHTML = plan.html || "";
   enhancePlannerControls();
   document.getElementById("app").scrollIntoView({behavior:"smooth"});
@@ -1366,6 +1431,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   handleCheckoutReturn();
+  loadDietaryExclusions();
   loadPreferredGroceries();
 
   const preferredWrap = document.getElementById("grocery-preferences");
@@ -1381,6 +1447,46 @@ document.addEventListener("DOMContentLoaded", () => {
       savePreferredGroceries();
     });
   }
+  const exclusionWrap = document.getElementById("dietary-exclusions");
+  if (exclusionWrap) {
+    exclusionWrap.addEventListener("change", (event) => {
+      const box = event.target.closest("[data-dietary-exclusion]");
+      if (!box) return;
+      saveDietaryExclusions();
+      showToast(box.checked ? "SmartMeal will avoid " + box.dataset.dietaryExclusion + "." : box.dataset.dietaryExclusion + " can be used again.");
+    });
+  }
+
+  document.querySelectorAll("[data-select-food-group]").forEach(button => {
+    button.addEventListener("click", () => {
+      const group = button.dataset.selectFoodGroup;
+      const boxes = Array.from(document.querySelectorAll("[data-food-group='" + group + "'] [data-preferred-grocery]"));
+      const current = selectedPreferredGroceries();
+      const existing = new Set(current);
+      const remaining = Math.max(0, 12 - current.length);
+      boxes.filter(box=>!existing.has(box.dataset.preferredGrocery) && !foodIsExcluded(box.dataset.preferredGrocery,selectedDietaryExclusions()))
+        .slice(0,remaining)
+        .forEach(box=>box.checked=true);
+      savePreferredGroceries();
+      showToast("Selected as many " + group + " foods as fit in your 12-food preference set.");
+    });
+  });
+
+  const selectAllButton = document.getElementById("select-all-foods");
+  if (selectAllButton) {
+    selectAllButton.addEventListener("click", () => {
+      document.querySelectorAll("[data-preferred-grocery]").forEach(box=>box.checked=false);
+      let count=0;
+      document.querySelectorAll("[data-preferred-grocery]").forEach(box=>{
+        if(count>=12 || foodIsExcluded(box.dataset.preferredGrocery,selectedDietaryExclusions())) return;
+        box.checked=true;
+        count++;
+      });
+      savePreferredGroceries();
+      showToast("Selected up to 12 foods for the weekly meal builder.");
+    });
+  }
+
   const clearPreferred = document.getElementById("clear-preferred-groceries");
   if (clearPreferred) {
     clearPreferred.addEventListener("click", () => {
