@@ -773,6 +773,7 @@ async function refreshPremiumStatus(){
       subscriptionPlan = "premium";
       currentUserId = null;
       updatePremiumUI();
+      updateDashboardUI();
       await loadSavedPlans();
       await loadFavorites();
       await loadFamilyHousehold();
@@ -783,6 +784,8 @@ async function refreshPremiumStatus(){
     if (signoutButton) signoutButton.style.display = "inline-flex";
     if (status) status.style.display = "inline-flex";
     currentUserId = data.session.user.id;
+    const dashboardEmail = document.getElementById("dashboard-email");
+    if(dashboardEmail) dashboardEmail.dataset.email = data.session.user.email || "";
 
     const { data: profile, error } = await supabaseClient
       .from("profiles")
@@ -799,6 +802,7 @@ async function refreshPremiumStatus(){
     }
 
     updatePremiumUI();
+    updateDashboardUI();
     await loadSavedPlans();
     await loadFavorites();
     await loadFamilyHousehold();
@@ -807,6 +811,7 @@ async function refreshPremiumStatus(){
     isPremium = false;
     subscriptionPlan = "premium";
     updatePremiumUI();
+    updateDashboardUI();
     await loadSavedPlans();
     await loadFavorites();
     await loadFamilyHousehold();
@@ -817,6 +822,7 @@ function updatePremiumUI(){
   const tools = document.getElementById("premium-tools");
   const upsell = document.getElementById("premium-upsell");
   const status = document.getElementById("account-status");
+  const dashboardLink = document.getElementById("dashboard-link");
 
   if (tools) tools.style.display = isPremium ? "block" : "none";
   if (upsell) upsell.style.display = isPremium ? "none" : "block";
@@ -824,6 +830,31 @@ function updatePremiumUI(){
   if (status) {
     status.textContent = isPremium ? (subscriptionPlan === "family" ? "✨ Family Premium" : "✨ Premium") : "Free";
   }
+  if (dashboardLink) dashboardLink.style.display = currentUserId ? "inline" : "none";
+}
+
+function updateDashboardUI(){
+  const dashboard=document.getElementById("account-dashboard");
+  if(!dashboard) return;
+  if(!currentUserId){
+    dashboard.style.display="none";
+    return;
+  }
+  dashboard.style.display="block";
+  const planEl=document.getElementById("dashboard-plan");
+  const familyEl=document.getElementById("dashboard-family");
+  const savedEl=document.getElementById("dashboard-saved-count");
+  const favoriteEl=document.getElementById("dashboard-favorite-count");
+  const emailEl=document.getElementById("dashboard-email");
+  const sessionText=document.getElementById("dashboard-session-text");
+  const userLabel=document.getElementById("dashboard-user-label");
+  if(planEl) planEl.textContent=isPremium ? (subscriptionPlan==="family" ? "Family" : "Premium") : "Free";
+  if(familyEl) familyEl.textContent=subscriptionPlan==="family" && familyHousehold ? (familyHousehold.household_name || "Household ready") : (subscriptionPlan==="family" ? "Set up your household" : "Not included");
+  if(savedEl) savedEl.textContent=String(document.getElementById("saved-plans-list")?._plans?.size || 0);
+  if(favoriteEl) favoriteEl.textContent=String(favoriteMeals.size);
+  if(emailEl) emailEl.textContent=currentUserId ? (emailEl.dataset.email || "") : "";
+  if(userLabel) userLabel.textContent=isPremium ? "Your SmartMeal account" : "Your free SmartMeal account";
+  if(sessionText) sessionText.textContent=isPremium ? "Your saved weeks and favorite recipes stay connected to this account." : "Build and use your free week here. Upgrade later to save plans and recipes.";
 }
 
 function requirePremium(actionName){
@@ -1028,7 +1059,7 @@ function renderFavoriteMeals(){
     const button = document.createElement("button");
     button.type = "button";
     button.className = "favorite-chip";
-    button.dataset.favoriteMeal = meal;
+    button.dataset.open-favorite-meal = meal;
     button.textContent = "★ " + meal;
     list.appendChild(button);
   });
@@ -1054,8 +1085,10 @@ async function loadFavorites(){
     favoriteMeals = new Set((data || []).map(item => item.meal));
     renderFavoriteMeals();
     updateFavoriteButtons();
+    updateDashboardUI();
   } catch (error) {
     console.error("SmartMeal favorites error:", error);
+    updateDashboardUI();
   }
 }
 
@@ -1078,6 +1111,7 @@ async function toggleFavorite(meal){
     }
     renderFavoriteMeals();
     updateFavoriteButtons();
+    updateDashboardUI();
   } catch (error) {
     console.error("SmartMeal favorite update error:", error);
     showToast(error.message || "Unable to update favorites.");
@@ -1166,6 +1200,7 @@ async function loadFamilyHousehold(){
     document.getElementById("family-household-name").textContent=familyHousehold.household_name || "My Family";
     document.getElementById("family-invite-code").textContent=familyHousehold.invite_code || "--------";
     document.getElementById("family-member-count").textContent=(familyHousehold.member_count || 0) + ((familyHousehold.member_count || 0) === 1 ? " member" : " members");
+    updateDashboardUI();
 
     await Promise.all([loadFamilyMembers(),loadFamilyPreferences(),loadFamilyGrocery()]);
   }catch(error){
@@ -1388,6 +1423,7 @@ async function loadSavedPlans(){
     if (!user || !isPremium) {
       savedSection.style.display = "none";
       list.innerHTML = "";
+      updateDashboardUI();
       return;
     }
 
@@ -1401,6 +1437,7 @@ async function loadSavedPlans(){
     if (error) throw error;
 
     savedSection.style.display = "block";
+    updateDashboardUI();
 
     if (!data || data.length === 0) {
       list.innerHTML = `<div class="saved-empty">No saved plans yet. Generate a week and click “Save this week”.</div>`;
@@ -1431,6 +1468,7 @@ async function loadSavedPlans(){
     }).join("");
 
     list._plans = new Map(data.map(item => [item.id, item.plan || {}]));
+    updateDashboardUI();
   } catch (error) {
     console.error("SmartMeal saved plans error:", error);
     savedSection.style.display = "block";
@@ -1873,8 +1911,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const favoriteList = document.getElementById("favorite-meals-list");
   if (favoriteList) {
     favoriteList.addEventListener("click", (event) => {
-      const button = event.target.closest("[data-favorite-meal]");
-      if (button) toggleFavorite(button.dataset.favoriteMeal || "");
+      const button = event.target.closest("[data-open-favorite-meal]");
+      if (button) selectMeal(button.dataset.openFavoriteMeal || "");
     });
   }
 
