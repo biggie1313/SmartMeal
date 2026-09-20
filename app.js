@@ -7,6 +7,8 @@ let subscriptionPlan = "premium";
 let currentWeek = [];
 let substitutionCursors = {};
 let favoriteMeals = new Set();
+let familyHousehold = null;
+let currentUserId = null;
 
 const plans={
 any:[
@@ -76,15 +78,18 @@ async function refreshPremiumStatus(){
       if (signoutButton) signoutButton.style.display = "none";
       if (status) status.style.display = "none";
       subscriptionPlan = "premium";
+      currentUserId = null;
       updatePremiumUI();
       await loadSavedPlans();
       await loadFavorites();
+      await loadFamilyHousehold();
       return;
     }
 
     if (signupButton) signupButton.style.display = "none";
     if (signoutButton) signoutButton.style.display = "inline-flex";
     if (status) status.style.display = "inline-flex";
+    currentUserId = data.session.user.id;
 
     const { data: profile, error } = await supabaseClient
       .from("profiles")
@@ -103,6 +108,7 @@ async function refreshPremiumStatus(){
     updatePremiumUI();
     await loadSavedPlans();
     await loadFavorites();
+    await loadFamilyHousehold();
   } catch (error) {
     console.error("SmartMeal premium status error:", error);
     isPremium = false;
@@ -110,6 +116,7 @@ async function refreshPremiumStatus(){
     updatePremiumUI();
     await loadSavedPlans();
     await loadFavorites();
+    await loadFamilyHousehold();
   }
 }
 
@@ -393,6 +400,224 @@ function swapMeal(dayIndex, mealIndex){
   showToast("Meal swapped to " + next + ".");
 }
 
+
+function setFamilyVisibility(show){
+  const section=document.getElementById("family-tools");
+  if(section) section.style.display=show ? "block" : "none";
+}
+
+async function loadFamilyHousehold(){
+  const section=document.getElementById("family-tools");
+  const onboarding=document.getElementById("family-onboarding");
+  const dashboard=document.getElementById("family-dashboard");
+  if(!section || !onboarding || !dashboard) return;
+
+  if(!isPremium || subscriptionPlan !== "family"){
+    familyHousehold=null;
+    section.style.display="none";
+    return;
+  }
+
+  section.style.display="block";
+
+  try{
+    const {data,error}=await supabaseClient.rpc("get_my_household");
+    if(error) throw error;
+
+    if(!data || data.length===0){
+      familyHousehold=null;
+      onboarding.style.display="block";
+      dashboard.style.display="none";
+      return;
+    }
+
+    familyHousehold=data[0];
+    onboarding.style.display="none";
+    dashboard.style.display="block";
+
+    document.getElementById("family-household-name").textContent=familyHousehold.household_name || "My Family";
+    document.getElementById("family-invite-code").textContent=familyHousehold.invite_code || "--------";
+    document.getElementById("family-member-count").textContent=(familyHousehold.member_count || 0) + ((familyHousehold.member_count || 0) === 1 ? " member" : " members");
+
+    await Promise.all([loadFamilyMembers(),loadFamilyPreferences(),loadFamilyGrocery()]);
+  }catch(error){
+    console.error("SmartMeal family household error:",error);
+    onboarding.style.display="block";
+    dashboard.style.display="none";
+    showToast(error.message || "Unable to load your family household.");
+  }
+}
+
+async function createFamilyHousehold(){
+  if(!isPremium || subscriptionPlan !== "family"){
+    showToast("A Family subscription is required.");
+    return;
+  }
+  const input=document.getElementById("family-name");
+  const name=(input?.value || "").trim();
+  try{
+    const {data,error}=await supabaseClient.rpc("create_household",{p_name:name || "My Family"});
+    if(error) throw error;
+    showToast("Family household created.");
+    await loadFamilyHousehold();
+  }catch(error){
+    showToast(error.message || "Unable to create your household.");
+  }
+}
+
+async function joinFamilyHousehold(){
+  if(!isPremium || subscriptionPlan !== "family"){
+    showToast("A Family subscription is required.");
+    return;
+  }
+  const input=document.getElementById("family-join-code");
+  const code=(input?.value || "").trim();
+  if(!code){showToast("Enter an invite code.");return;}
+  try{
+    const {error}=await supabaseClient.rpc("join_household",{p_invite_code:code});
+    if(error) throw error;
+    showToast("You joined the family household.");
+    if(input) input.value="";
+    await loadFamilyHousehold();
+  }catch(error){
+    showToast(error.message || "Unable to join the household.");
+  }
+}
+
+async function loadFamilyMembers(){
+  const list=document.getElementById("family-members-list");
+  if(!list || !familyHousehold?.household_id) return;
+  try{
+    const {data,error}=await supabaseClient
+      .from("household_members")
+      .select("user_id, role, joined_at")
+      .eq("household_id",familyHousehold.household_id)
+      .order("joined_at",{ascending:true});
+    if(error) throw error;
+    list.innerHTML=(data||[]).map((member,index)=>{
+      const mine=member.user_id===currentUserId;
+      const label=mine ? "You" : "Family member " + (index+1);
+      return "<div class=\"family-member\"><span>"+escapeHtml(label)+"</span><small>"+escapeHtml(member.role==="owner" ? "Owner" : "Member")+"</small></div>";
+    }).join("") || "<div class=\"saved-empty\">No members yet.</div>";
+  }catch(error){
+    console.error("SmartMeal family members error:",error);
+    list.innerHTML="<div class=\"saved-empty\">Unable to load members.</div>";
+  }
+}
+
+async function loadFamilyPreferences(){
+  if(!familyHousehold?.household_id) return;
+  try{
+    const {data,error}=await supabaseClient
+      .from("household_preferences")
+      .select("diet, notes")
+      .eq("household_id",familyHousehold.household_id)
+      .maybeSingle();
+    if(error) throw error;
+    if(data){
+      const diet=document.getElementById("family-diet");
+      const notes=document.getElementById("family-notes");
+      if(diet) diet.value=data.diet || "balanced";
+      if(notes) notes.value=data.notes || "";
+    }
+  }catch(error){
+    console.error("SmartMeal family preferences error:",error);
+  }
+}
+
+async function saveFamilyPreferences(){
+  if(!familyHousehold?.household_id) return;
+  try{
+    const diet=document.getElementById("family-diet")?.value || "balanced";
+    const notes=(document.getElementById("family-notes")?.value || "").trim();
+    const {error}=await supabaseClient
+      .from("household_preferences")
+      .upsert({
+        household_id:familyHousehold.household_id,
+        diet,
+        notes,
+        updated_by:(await supabaseClient.auth.getUser()).data.user?.id || null,
+        updated_at:new Date().toISOString()
+      },{onConflict:"household_id"});
+    if(error) throw error;
+    showToast("Family preferences saved.");
+  }catch(error){
+    showToast(error.message || "Unable to save family preferences.");
+  }
+}
+
+async function loadFamilyGrocery(){
+  const list=document.getElementById("family-grocery-list");
+  if(!list || !familyHousehold?.household_id) return;
+  try{
+    const {data,error}=await supabaseClient
+      .from("household_grocery_items")
+      .select("id,item,checked,created_at")
+      .eq("household_id",familyHousehold.household_id)
+      .order("created_at",{ascending:true});
+    if(error) throw error;
+    list.innerHTML=(data||[]).map(row=>
+      "<label class=\"family-grocery-item\"><input type=\"checkbox\" data-family-grocery-id=\""+escapeHtml(row.id)+"\" "+(row.checked ? "checked" : "")+"><span>"+escapeHtml(row.item)+"</span><button type=\"button\" class=\"family-grocery-delete\" data-family-grocery-delete=\""+escapeHtml(row.id)+"\" aria-label=\"Delete "+escapeHtml(row.item)+"\">×</button></label>"
+    ).join("") || "<div class=\"saved-empty\">Your shared list is empty.</div>";
+  }catch(error){
+    console.error("SmartMeal family grocery error:",error);
+    list.innerHTML="<div class=\"saved-empty\">Unable to load the shared list.</div>";
+  }
+}
+
+async function addFamilyGroceryItem(){
+  if(!familyHousehold?.household_id) return;
+  const input=document.getElementById("family-grocery-input");
+  const item=(input?.value || "").trim();
+  if(!item) return;
+  try{
+    const {data:sessionData}=await supabaseClient.auth.getSession();
+    const user=sessionData?.session?.user;
+    if(!user) throw new Error("Sign in required");
+    const {error}=await supabaseClient
+      .from("household_grocery_items")
+      .insert({household_id:familyHousehold.household_id,item,added_by:user.id});
+    if(error) throw error;
+    if(input) input.value="";
+    await loadFamilyGrocery();
+    showToast("Added to the shared grocery list.");
+  }catch(error){
+    showToast(error.message || "Unable to add grocery item.");
+  }
+}
+
+async function toggleFamilyGrocery(id,checked){
+  try{
+    const {error}=await supabaseClient.from("household_grocery_items").update({checked}).eq("id",id);
+    if(error) throw error;
+  }catch(error){
+    showToast(error.message || "Unable to update grocery item.");
+  }
+}
+
+async function deleteFamilyGrocery(id){
+  try{
+    const {error}=await supabaseClient.from("household_grocery_items").delete().eq("id",id);
+    if(error) throw error;
+    await loadFamilyGrocery();
+    showToast("Removed from the shared grocery list.");
+  }catch(error){
+    showToast(error.message || "Unable to remove grocery item.");
+  }
+}
+
+async function copyFamilyInviteCode(){
+  const code=document.getElementById("family-invite-code")?.textContent?.trim();
+  if(!code || code==="--------") return;
+  try{
+    await navigator.clipboard.writeText(code);
+    showToast("Invite code copied.");
+  }catch{
+    showToast("Invite code: " + code);
+  }
+}
+
+
 async function loadSavedPlans(){
   const savedSection = document.getElementById("saved-plans");
   const list = document.getElementById("saved-plans-list");
@@ -565,6 +790,8 @@ async function signOut(){
     isPremium = false;
     subscriptionPlan = "premium";
     favoriteMeals = new Set();
+    familyHousehold = null;
+    currentUserId = null;
     updatePremiumUI();
     await loadSavedPlans();
     await loadFavorites();
@@ -685,6 +912,25 @@ async function resendConfirmation(){
   }
 }
 
+async function startFamilyCheckout(){
+  const { data } = await supabaseClient.auth.getSession();
+  if (!data.session) {
+    openAuth("signup", "family");
+    return;
+  }
+  if (isPremium) {
+    if (subscriptionPlan === "family") {
+      document.getElementById("family")?.scrollIntoView({behavior:"smooth"});
+      showToast("You already have the Family plan.");
+    } else {
+      showToast("You already have Premium. Use Manage subscription to change your plan.");
+      document.getElementById("premium-tools")?.scrollIntoView({behavior:"smooth"});
+    }
+    return;
+  }
+  fakeCheckout("family");
+}
+
 async function fakeCheckout(plan = "premium"){
   const { data } = await supabaseClient.auth.getSession();
   if (!data.session) {
@@ -754,6 +1000,18 @@ document.addEventListener("DOMContentLoaded", () => {
   const observer = new MutationObserver(() => enhancePlannerControls());
   observer.observe(result, { childList: true, subtree: true });
   enhancePlannerControls();
+
+  const familyGroceryList = document.getElementById("family-grocery-list");
+  if (familyGroceryList) {
+    familyGroceryList.addEventListener("change", (event) => {
+      const checkbox = event.target.closest("[data-family-grocery-id]");
+      if (checkbox) toggleFamilyGrocery(checkbox.dataset.familyGroceryId, checkbox.checked);
+    });
+    familyGroceryList.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-family-grocery-delete]");
+      if (button) deleteFamilyGrocery(button.dataset.familyGroceryDelete);
+    });
+  }
 
   const favoriteList = document.getElementById("favorite-meals-list");
   if (favoriteList) {
