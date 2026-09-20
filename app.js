@@ -252,20 +252,25 @@ const groceryRules=[
   {pattern:/banana/i,items:["Bananas"]},
   {pattern:/apple/i,items:["Apples"]},
   {pattern:/egg|omelet|muffin/i,items:["Eggs"]},
-  {pattern:/toast|french toast/i,items:["Bread"]},
+  {pattern:/whole-grain (toast|bread)|toast|french toast/i,items:["Whole-grain bread"]},
   {pattern:/yogurt/i,items:["Greek yogurt"]},
   {pattern:/berries/i,items:["Berries"]},
   {pattern:/granola/i,items:["Granola"]},
   {pattern:/peanut butter/i,items:["Peanut butter"]},
-  {pattern:/fruit/i,items:["Fruit"]},
   {pattern:/chia/i,items:["Chia seeds"]},
-  {pattern:/cottage cheese/i,items:["Cottage cheese"]},
+  {pattern:/almond/i,items:["Almonds"]},
+  {pattern:/walnut/i,items:["Walnuts"]},
+  {pattern:/pumpkin seed/i,items:["Pumpkin seeds"]},
   {pattern:/avocado/i,items:["Avocado"]},
   {pattern:/spinach/i,items:["Spinach"]},
   {pattern:/tomato/i,items:["Tomatoes"]},
-  {pattern:/chees|cheese/i,items:["Cheese"]},
+  {pattern:/broccoli/i,items:["Broccoli"]},
+  {pattern:/carrot/i,items:["Carrots"]},
+  {pattern:/sweet potato/i,items:["Sweet potatoes"]},
+  {pattern:/mixed vegetable|vegetable|veggie|zucchini|cauliflower/i,items:["Mixed vegetables"]},
   {pattern:/chicken/i,items:["Chicken breast"]},
-  {pattern:/turkey|beef/i,items:["Ground turkey/beef"]},
+  {pattern:/turkey|beef/i,items:["Turkey"]},
+  {pattern:/salmon/i,items:["Salmon"]},
   {pattern:/tuna/i,items:["Tuna"]},
   {pattern:/shrimp/i,items:["Shrimp"]},
   {pattern:/tofu/i,items:["Tofu"]},
@@ -273,14 +278,11 @@ const groceryRules=[
   {pattern:/lentil/i,items:["Lentils"]},
   {pattern:/black bean/i,items:["Black beans"]},
   {pattern:/bean/i,items:["Beans"]},
-  {pattern:/rice|grain bowl/i,items:["Rice"]},
+  {pattern:/brown rice|rice/i,items:["Brown rice"]},
   {pattern:/quinoa/i,items:["Quinoa"]},
-  {pattern:/pasta/i,items:["Pasta"]},
-  {pattern:/taco|wrap|quesadilla|tortilla|lettuce taco/i,items:["Tortillas"]},
+  {pattern:/whole-grain tortilla|tortilla|wrap|taco|quesadilla|lettuce wrap/i,items:["Whole-grain tortillas"]},
   {pattern:/hummus/i,items:["Hummus"]},
-  {pattern:/stir-fry|stir fry|vegetable|veggie|broccoli/i,items:["Mixed vegetables","Carrots"]},
-  {pattern:/potato/i,items:["Potatoes"]},
-  {pattern:/chili/i,items:["Beans","Carrots"]}
+  {pattern:/olive oil/i,items:["Olive oil"]}
 ];
 
 function ingredientsForMeal(meal){
@@ -291,10 +293,10 @@ function ingredientsForMeal(meal){
     }
   });
   if(found.length===0){
-    if(/leftover/i.test(meal)) return ["Rice","Mixed vegetables"];
+    if(/leftover/i.test(meal)) return ["Brown rice","Mixed vegetables"];
     return ["Mixed vegetables"];
   }
-  if(found.some(x=>["Chicken breast","Ground turkey/beef","Tofu","Shrimp","Tuna"].includes(x)) && !found.includes("Mixed vegetables")) found.push("Mixed vegetables");
+  if(found.some(x=>["Chicken breast","Turkey","Tofu","Shrimp","Tuna","Salmon"].includes(x)) && !found.includes("Mixed vegetables")) found.push("Mixed vegetables");
   return found;
 }
 
