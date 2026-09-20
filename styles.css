@@ -376,3 +376,19 @@ footer{
 @media(max-width:850px){
   .value-strip{grid-template-columns:1fr;margin-bottom:10px}
 }
+
+/* Connected grocery list */
+.grocery-header{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:24px;margin-bottom:10px;flex-wrap:wrap}
+.grocery-header strong{display:block;font-size:18px}
+.grocery-header span:not(.grocery-count){display:block;color:var(--muted);font-size:12px;margin-top:2px}
+.grocery-count{padding:6px 9px;border-radius:999px;background:#edf5ee;color:var(--green);font-size:11px;font-weight:850}
+.groceries{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.gitem{display:flex;align-items:flex-start;gap:11px;padding:12px;transition:border-color .18s ease,box-shadow .18s ease,transform .18s ease}
+.gitem:hover{border-color:#c9dacd;box-shadow:var(--shadow-soft);transform:translateY(-1px)}
+.gitem input{flex:0 0 auto;width:18px;height:18px;margin:2px 0 0;accent-color:var(--green)}
+.grocery-copy{min-width:0}
+.grocery-name{display:block;font-weight:800;font-size:14px}
+.grocery-copy small{display:block;margin-top:3px;color:var(--muted);font-size:11px;line-height:1.4}
+.gitem input:checked + .grocery-copy .grocery-name{text-decoration:line-through;opacity:.55}
+.grocery-empty{margin-top:20px;padding:14px;border:1px dashed var(--line);border-radius:12px;color:var(--muted)}
+@media(max-width:650px){.groceries{grid-template-columns:1fr}}
