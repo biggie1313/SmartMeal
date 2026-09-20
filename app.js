@@ -33,6 +33,12 @@ mediterranean:[
 ],
 familyfriendly:[
 ["Oatmeal + banana","Cheesy chicken rice bowls"],["Eggs + toast","Turkey tacos"],["Yogurt + berries","Chicken pasta"],["Pancakes + fruit","Chicken quesadillas"],["Eggs + toast","Mild beef & bean chili"],["French toast + banana","Chicken wraps"],["Yogurt + granola","Leftover family bowl"]
+],
+higherfiber:[
+["Oatmeal + berries","Lentil grain bowls"],["Greek yogurt + fruit","Black bean tacos"],["Overnight oats + chia","Chickpea pasta"],["Eggs + whole-grain toast","Bean & veggie stir-fry"],["Yogurt + berries","Lentil chili"],["Oatmeal + banana","Hummus veggie wraps"],["Fruit + granola","Leftover grain & bean bowl"]
+],
+mediterranean:[
+["Greek yogurt + fruit","Lemon chicken bowls"],["Eggs + tomato toast","Turkey & hummus wraps"],["Oatmeal + berries","Greek chicken salad"],["Eggs + spinach","Mediterranean pasta"],["Yogurt + granola","Chickpea veggie bowls"],["Avocado toast + eggs","Herb chicken & potatoes"],["Fruit + yogurt","Leftover Mediterranean bowl"]
 ]
 };
 const groceries=["Oats","Bananas","Eggs","Bread","Greek yogurt","Berries","Chicken breast","Rice","Tortillas","Ground turkey/beef","Beans","Pasta","Mixed vegetables","Carrots","Hummus","Apples","Peanut butter","Fruit","Granola","Cheese"];
@@ -178,14 +184,20 @@ function generate(){
   let targetNote = "";
 
   if (requestedTarget !== "balanced") {
-    if (!requirePremium("Nutrition targets")) {
+    if (!requirePremium("Nutrition focuses")) {
       document.getElementById("nutrition-target").value = "balanced";
     } else if (requestedTarget === "highprotein") {
       plan = plans.highprotein;
-      targetNote = " · high protein";
+      targetNote = " · higher protein";
     } else if (requestedTarget === "lowercarb") {
       plan = plans.lowercarb;
-      targetNote = " · lower carb target";
+      targetNote = " · lower carb";
+    } else if (requestedTarget === "higherfiber") {
+      plan = plans.higherfiber;
+      targetNote = " · higher fiber";
+    } else if (requestedTarget === "mediterranean") {
+      plan = plans.mediterranean;
+      targetNote = " · Mediterranean focus";
     }
   }
 
