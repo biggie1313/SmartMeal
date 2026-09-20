@@ -58,7 +58,7 @@ module.exports = async function handler(req, res) {
 
     const body = new URLSearchParams();
     body.set("customer", profiles[0].stripe_customer_id);
-    body.set("return_url", "https://smartmeal-commercial-mvp.vercel.app/");
+    body.set("return_url", process.env.STRIPE_PORTAL_RETURN_URL || "https://smartmeal-commercial-mvp.vercel.app/");
 
     const stripeResponse = await fetch(
       "https://api.stripe.com/v1/billing_portal/sessions",
