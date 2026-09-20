@@ -7,18 +7,18 @@
 <meta name="theme-color" content="#173326">
 <meta property="og:title" content="SmartMeal — Eat well. Spend less.">
 <meta property="og:description" content="Plan your week, simplify your grocery list, and keep dinner moving.">
-<link rel="stylesheet" href="styles.css?v=20260920-family-pass2">
+<link rel="stylesheet" href="styles.css?v=20260921-professional">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-<header class="nav"><div class="brand">🥕 <span>SmartMeal</span></div><nav><a href="#how">How it works</a><a href="#family">Family</a><a href="#pricing">Pricing</a><a href="#faq">FAQ</a><span id="account-status" class="pill" style="display:none"></span><button id="signup-button" class="btn small" onclick="openAuth('signup')">Try it free</button><button id="signout-button" class="btn small outline" style="display:none" onclick="signOut()">Sign out</button></nav></header>
+<div class="announcement"><div>Weekly meal planning, built around your life.</div><span>Free to start · Premium $7.99/mo · Family $12.99/mo</span></div><header class="nav"><div class="brand"><span class="brand-mark" aria-hidden="true">S</span><span>SmartMeal</span></div><nav><a href="#how">How it works</a><a href="#family">Family</a><a href="#pricing">Pricing</a><a href="#faq">FAQ</a><span id="account-status" class="pill" style="display:none"></span><button id="signup-button" class="btn small" onclick="openAuth('signup')">Try it free</button><button id="signout-button" class="btn small outline" style="display:none" onclick="signOut()">Sign out</button></nav></header>
 
 <section class="hero">
-<div class="hero-copy"><span class="pill">✨ Weekly meal planning made simple</span>
+<div class="hero-copy"><span class="pill">SMARTER WEEKS · SIMPLER SHOPPING</span>
 <h1>Eat well.<br><em>Spend less.</em></h1>
 <p>SmartMeal builds a practical weekly meal plan and grocery list around your household, budget and preferences—so dinner takes less planning.</p>
 <div class="hero-actions"><button class="btn" onclick="showApp()">Build my free plan →</button><a href="#pricing" class="text-link">See premium features</a></div>
-<div class="trust">✓ No credit card &nbsp; ✓ Free weekly plan &nbsp; ✓ Cancel anytime</div></div>
+<div class="trust"><span>✓ No credit card</span><span>✓ Free weekly plan</span><span>✓ Secure checkout</span></div></div>
 <div class="hero-card"><div class="mini-top"><span>This week</span><b>Budget: $90</b></div><div class="progress"><span></span></div>
 <div class="meal-row"><span>Mon</span><strong>Chicken rice bowls</strong><b>$12</b></div><div class="meal-row"><span>Tue</span><strong>Turkey tacos</strong><b>$10</b></div><div class="meal-row"><span>Wed</span><strong>Stir-fry night</strong><b>$11</b></div><div class="meal-row faded"><span>Thu</span><strong>Chickpea pasta</strong><b>$9</b></div>
 <div class="save">♻️ 8 ingredients reused this week</div></div>
@@ -122,10 +122,10 @@
   <details><summary>What does Premium unlock?</summary><p>Premium adds nutrition targets, ingredient-reuse preferences, saved weekly plans, meal favorites, and meal substitutions.</p></details>
   <details><summary>How does billing work?</summary><p>Premium is billed monthly through Stripe. Subscription management is provided through the secure Stripe billing portal.</p></details>
   <details><summary>Can I cancel later?</summary><p>Yes. Premium members can open Manage subscription from the planner to access the Stripe billing portal and manage their subscription.</p></details>
-  <details><summary>Is the Family plan available?</summary><p>The Family plan is being finished before launch so its shared household features are ready. It is not available for purchase yet.</p></details>
+  <details><summary>What does Family include?</summary><p>Family adds a shared household, shared meal preferences, shared grocery lists, and invite codes for household members.</p></details>
 </div></section>
 
-<footer><div class="brand">🥕 SmartMeal</div><p>Eat well. Spend less. Waste less.</p><small>Accounts, Premium access, saved plans and secure checkout are connected.</small><div class="footer-note">Family features and live grocery price comparison are still in development.</div></footer>
+<footer><div class="brand footer-brand"><span class="brand-mark" aria-hidden="true">S</span><span>SmartMeal</span></div><p>Plan smarter. Shop simpler. Waste less.</p><small>Meal planning, saved plans, family tools, and secure checkout in one place.</small><div class="footer-note">© 2026 SmartMeal · Live grocery price comparison is coming soon.</div></footer>
 <div id="toast" class="toast"></div>
 
 <div id="auth-modal" class="auth-modal" aria-hidden="true">
