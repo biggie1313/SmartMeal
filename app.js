@@ -507,7 +507,7 @@ function renderCurrentWeekResult(){
   const selectedExclusions=selectedDietaryExclusions();
   const covered=selectedPreferences.filter(food=>currentWeek.flat().some(meal=>mealUsesPreference(meal,food)));
   const coveredText=selectedPreferences.length || selectedExclusions.length
-    ? `<div class="preference-summary">${selectedPreferences.length ? "<strong>Built around your foods:</strong> "+escapeHtml(covered.join(", "))+" <span>· "+covered.length+"/"+selectedPreferences.length+" selected foods used</span>" : ""}${selectedExclusions.length ? "<small class="preference-exclusions"><strong>Avoiding:</strong> "+escapeHtml(selectedExclusions.join(", "))+"</small>" : ""}</div>`
+    ? `<div class="preference-summary">${selectedPreferences.length ? "<strong>Built around your foods:</strong> "+escapeHtml(covered.join(", "))+" <span>· "+covered.length+"/"+selectedPreferences.length+" selected foods used</span>" : ""}${selectedExclusions.length ? '<small class="preference-exclusions"><strong>Avoiding:</strong> '+escapeHtml(selectedExclusions.join(", "))+"</small>" : ""}</div>`
     : `<div class="preference-summary muted">Choose healthy foods above and SmartMeal will build your 7-day plan around them.</div>`;
   const estimate=estimateWeeklySpend(currentWeek,people);
   const budgetStatus=groceryBudgetStatus(estimate,budget);
