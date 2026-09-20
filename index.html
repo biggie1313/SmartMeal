@@ -266,7 +266,12 @@
       <section><h3>How to make it</h3><ol id="recipe-directions" class="recipe-directions"></ol></section>
     </div>
     <div class="recipe-note">Quantities are scaled to the household size selected in your planner. Adjust seasoning and portions to suit your household.</div>
-    <button type="button" class="btn" data-recipe-close>Back to my week</button>
+    <div class="recipe-actions">
+      <button id="recipe-save" type="button" class="btn" onclick="saveRecipeFromModal()">☆ Save recipe</button>
+      <button type="button" class="btn outline" onclick="addRecipeIngredientsToGroceryList(currentRecipeMeal)">🛒 Add ingredients to grocery list</button>
+      <button type="button" class="btn outline" onclick="printRecipe()">🖨 Print recipe</button>
+    </div>
+    <button type="button" class="btn outline" data-recipe-close>Back to my week</button>
   </div>
 </div>
 </body></html>
