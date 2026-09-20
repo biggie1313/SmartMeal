@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>SmartMeal — Eat well. Spend less.</title>
-<link rel="stylesheet" href="styles.css?v=20260920-family-pass1">
+<link rel="stylesheet" href="styles.css?v=20260920-family-pass2">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
@@ -88,12 +88,12 @@
           <h4>Family preferences</h4>
           <label>Meal style<select id="family-diet"><option value="balanced">Balanced</option><option value="vegetarian">Vegetarian</option><option value="highprotein">High protein</option><option value="lowercarb">Lower carb</option></select></label>
           <label>Notes<textarea id="family-notes" rows="4" maxlength="500" placeholder="Things everyone should know about meals…"></textarea></label>
-          <button class="btn small" type="button" onclick="saveFamilyPreferences()">Save preferences</button>
+          <div class="family-preference-actions"><button class="btn small" type="button" onclick="saveFamilyPreferences()">Save preferences</button><button class="btn outline small" type="button" onclick="useFamilyPreferences()">Use for my next plan</button></div>
         </div>
 
         <div class="family-panel">
           <h4>Shared grocery list</h4>
-          <div class="family-grocery-add"><input id="family-grocery-input" type="text" maxlength="100" placeholder="Add milk, apples, rice…"><button class="btn small" type="button" onclick="addFamilyGroceryItem()">Add</button></div>
+          <div class="family-grocery-add"><input id="family-grocery-input" type="text" maxlength="100" placeholder="Add milk, apples, rice…"><button class="btn small" type="button" onclick="addFamilyGroceryItem()">Add</button></div><button class="btn outline small" type="button" onclick="shareCurrentGroceries()">Add my generated groceries</button>
           <div id="family-grocery-list" class="family-grocery-list"></div>
         </div>
 
@@ -144,5 +144,5 @@
   </div>
 </div>
 
-<script src="app.js?v=20260920-family-pass1"></script>
+<script src="app.js?v=20260920-family-pass2"></script>
 </body></html>
