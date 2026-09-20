@@ -26,3 +26,11 @@
   .app-section{background:#fff;padding:0}
   .planner{box-shadow:none;border:0;padding:0}
 }
+
+.faq-list{max-width:800px;margin:0 auto;display:grid;gap:12px}
+.faq-list details{background:#fff;border:1px solid var(--line);border-radius:14px;padding:18px 20px}
+.faq-list summary{cursor:pointer;font-weight:800;list-style:none}
+.faq-list summary::-webkit-details-marker{display:none}
+.faq-list summary:after{content:"+";float:right;color:var(--green);font-size:22px;line-height:1}
+.faq-list details[open] summary:after{content:"−"}
+.faq-list details p{margin:12px 0 0;color:var(--muted)}
