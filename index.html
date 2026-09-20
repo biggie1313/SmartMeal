@@ -62,9 +62,18 @@
 <section id="pricing" class="section pricing"><div class="center"><span class="eyebrow">PRICING</span><h2>Start free. Upgrade when SmartMeal saves you time.</h2></div>
 <div class="plans"><div class="plan"><h3>Free</h3><div class="price">$0<span>/month</span></div><p>For trying SmartMeal.</p><ul><li>1 weekly plan</li><li>Grocery checklist</li><li>Basic preferences</li></ul><button class="btn outline" onclick="showApp()">Start free</button></div>
 <div class="plan featured"><div class="popular">MOST POPULAR</div><h3>Premium</h3><div class="price">$7.99<span>/month</span></div><p>For busy households.</p><ul><li>Unlimited meal plans</li><li>Ingredient reuse optimizer</li><li>Favorites & substitutions</li><li>Nutrition targets</li><li>Price comparison (coming soon)</li></ul><button class="btn" onclick="fakeCheckout()">Start Premium</button></div>
-<div class="plan"><h3>Family</h3><div class="price">$12.99<span>/month</span></div><p>For bigger households.</p><ul><li>Everything in Premium</li><li>Multiple household profiles</li><li>Shared grocery lists</li><li>Family meal preferences</li></ul><button class="btn outline" type="button" onclick="fakeCheckout('family')">Choose Family</button></div></div></section>
+<div class="plan"><h3>Family</h3><div class="price">$12.99<span>/month</span></div><p>For bigger households.</p><ul><li>Everything in Premium</li><li>Larger-household planning</li><li>Shared grocery lists</li><li>Family meal preferences</li></ul><button class="btn outline" type="button" disabled>Coming soon</button></div></div></section>
 
-<footer><div class="brand">🥕 SmartMeal</div><p>Eat well. Spend less. Waste less.</p><small>Accounts, Premium access, saved plans and secure checkout are connected.</small></footer>
+<section id="faq" class="section faq"><div class="center"><span class="eyebrow">FAQ</span><h2>Simple answers before you start</h2><p>Everything you need to know about using SmartMeal.</p></div>
+<div class="faq-list">
+  <details open><summary>What do I get for free?</summary><p>You can create an account, generate a 7-day meal plan, and use the grocery checklist without paying.</p></details>
+  <details><summary>What does Premium unlock?</summary><p>Premium adds nutrition targets, ingredient-reuse preferences, saved weekly plans, meal favorites, and meal substitutions.</p></details>
+  <details><summary>How does billing work?</summary><p>Premium is billed monthly through Stripe. Subscription management is provided through the secure Stripe billing portal.</p></details>
+  <details><summary>Can I cancel later?</summary><p>Yes. Premium members can open Manage subscription from the planner to access the Stripe billing portal and manage their subscription.</p></details>
+  <details><summary>Is the Family plan available?</summary><p>The Family plan is being finished before launch so its shared household features are ready. It is not available for purchase yet.</p></details>
+</div></section>
+
+<footer><div class="brand">🥕 SmartMeal</div><p>Eat well. Spend less. Waste less.</p><small>Accounts, Premium access, saved plans and secure checkout are connected.</small><div class="footer-note">Family features and live grocery price comparison are still in development.</div></footer>
 <div id="toast" class="toast"></div>
 
 <div id="auth-modal" class="auth-modal" aria-hidden="true">
@@ -87,5 +96,5 @@
   </div>
 </div>
 
-<script src="app.js?v=20260919-finish-pass3"></script>
+<script src="app.js?v=20260920-finish-pass4"></script>
 </body></html>
