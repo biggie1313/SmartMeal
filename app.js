@@ -97,49 +97,66 @@ let currentGroceries=[];
 let preferredGroceries = new Set();
 
 const healthyMealLibrary=[
-  {type:"breakfast",name:"Berry oatmeal bowl",foods:["Oats","Berries","Greek yogurt","Pumpkin seeds"]},
-  {type:"breakfast",name:"Banana peanut butter oats",foods:["Oats","Bananas","Peanut butter"]},
-  {type:"breakfast",name:"Eggs + whole-grain toast",foods:["Eggs","Whole-grain bread","Spinach"]},
-  {type:"breakfast",name:"Greek yogurt berry parfait",foods:["Greek yogurt","Berries","Almonds","Walnuts"]},
-  {type:"breakfast",name:"Overnight oats + chia",foods:["Oats","Chia seeds","Berries","Pumpkin seeds"]},
-  {type:"breakfast",name:"Veggie egg scramble",foods:["Eggs","Spinach","Tomatoes","Mixed vegetables"]},
-  {type:"breakfast",name:"Apple cinnamon oatmeal",foods:["Oats","Apples","Walnuts"]},
-  {type:"breakfast",name:"Avocado toast + eggs",foods:["Avocado","Whole-grain bread","Eggs"]},
-  {type:"breakfast",name:"Cottage cheese + berries",foods:["Greek yogurt","Berries"]},
-  {type:"breakfast",name:"Fruit + yogurt chia bowl",foods:["Greek yogurt","Chia seeds","Apples"]},
+  {type:"breakfast",name:"Berry oatmeal bowl",foods:["Oats","Berries","Greek yogurt","Pumpkin seeds"],cost:1,tags:["fiber"]},
+  {type:"breakfast",name:"Banana peanut butter oats",foods:["Oats","Bananas","Peanut butter"],cost:1,tags:["protein","fiber"]},
+  {type:"breakfast",name:"Eggs + whole-grain toast",foods:["Eggs","Whole-grain bread","Spinach"],cost:1,tags:["protein"]},
+  {type:"breakfast",name:"Greek yogurt berry parfait",foods:["Greek yogurt","Berries","Almonds","Walnuts"],cost:2,tags:["protein","fiber"]},
+  {type:"breakfast",name:"Overnight oats + chia",foods:["Oats","Chia seeds","Berries","Pumpkin seeds"],cost:1,tags:["fiber"]},
+  {type:"breakfast",name:"Veggie egg scramble",foods:["Eggs","Spinach","Tomatoes","Mixed vegetables"],cost:1,tags:["protein"]},
+  {type:"breakfast",name:"Apple cinnamon oatmeal",foods:["Oats","Apples","Walnuts"],cost:1,tags:["fiber"]},
+  {type:"breakfast",name:"Avocado toast + eggs",foods:["Avocado","Whole-grain bread","Eggs"],cost:2,tags:["protein"]},
+  {type:"breakfast",name:"Greek yogurt + fruit chia bowl",foods:["Greek yogurt","Apples","Chia seeds"],cost:1,tags:["protein","fiber"]},
+  {type:"breakfast",name:"Spinach tomato egg bowl",foods:["Eggs","Spinach","Tomatoes","Avocado"],cost:2,tags:["protein"]},
+  {type:"breakfast",name:"Oatmeal + banana + seeds",foods:["Oats","Bananas","Pumpkin seeds","Chia seeds"],cost:1,tags:["fiber"]},
+  {type:"breakfast",name:"Yogurt berry walnut bowl",foods:["Greek yogurt","Berries","Walnuts"],cost:2,tags:["protein","fiber"]},
+  {type:"breakfast",name:"Peanut butter apple oats",foods:["Oats","Apples","Peanut butter"],cost:1,tags:["fiber"]},
 
-  {type:"lunch",name:"Chicken quinoa avocado bowl",foods:["Chicken breast","Quinoa","Avocado","Spinach","Olive oil"]},
-  {type:"lunch",name:"Turkey hummus whole-grain wrap",foods:["Turkey","Hummus","Whole-grain tortillas","Spinach"]},
-  {type:"lunch",name:"Tuna avocado salad",foods:["Tuna","Avocado","Spinach","Tomatoes","Olive oil"]},
-  {type:"lunch",name:"Chickpea quinoa Mediterranean bowl",foods:["Chickpeas","Quinoa","Tomatoes","Spinach","Hummus"]},
-  {type:"lunch",name:"Black bean avocado salad",foods:["Black beans","Avocado","Tomatoes","Spinach"]},
-  {type:"lunch",name:"Chicken spinach quinoa bowl",foods:["Chicken breast","Spinach","Quinoa","Carrots"]},
-  {type:"lunch",name:"Hummus veggie whole-grain wrap",foods:["Hummus","Whole-grain tortillas","Carrots","Spinach","Tomatoes"]},
-  {type:"lunch",name:"Lentil tomato grain bowl",foods:["Lentils","Brown rice","Tomatoes","Carrots","Spinach"]},
-  {type:"lunch",name:"Shrimp avocado quinoa salad",foods:["Shrimp","Avocado","Quinoa","Mixed vegetables"]},
-  {type:"lunch",name:"Tofu broccoli brown rice bowl",foods:["Tofu","Broccoli","Brown rice","Carrots"]},
-  {type:"lunch",name:"Salmon avocado salad",foods:["Salmon","Avocado","Spinach","Tomatoes","Olive oil"]},
-  {type:"lunch",name:"Turkey broccoli quinoa bowl",foods:["Turkey","Broccoli","Quinoa","Carrots"]},
-  {type:"lunch",name:"Three-bean quinoa salad",foods:["Beans","Black beans","Quinoa","Tomatoes","Spinach"]},
+  {type:"lunch",name:"Chicken quinoa avocado bowl",foods:["Chicken breast","Quinoa","Avocado","Spinach","Olive oil"],cost:2,tags:["protein"]},
+  {type:"lunch",name:"Turkey hummus whole-grain wrap",foods:["Turkey","Hummus","Whole-grain tortillas","Spinach"],cost:2,tags:["protein","mediterranean"]},
+  {type:"lunch",name:"Tuna avocado salad",foods:["Tuna","Avocado","Spinach","Tomatoes","Olive oil"],cost:2,tags:["protein","lowercarb"]},
+  {type:"lunch",name:"Chickpea quinoa Mediterranean bowl",foods:["Chickpeas","Quinoa","Tomatoes","Spinach","Hummus"],cost:1,tags:["fiber","mediterranean"]},
+  {type:"lunch",name:"Black bean avocado salad",foods:["Black beans","Avocado","Tomatoes","Spinach"],cost:1,tags:["fiber","lowercarb"]},
+  {type:"lunch",name:"Chicken spinach quinoa bowl",foods:["Chicken breast","Spinach","Quinoa","Carrots"],cost:2,tags:["protein"]},
+  {type:"lunch",name:"Hummus veggie whole-grain wrap",foods:["Hummus","Whole-grain tortillas","Carrots","Spinach","Tomatoes"],cost:1,tags:["fiber","mediterranean"]},
+  {type:"lunch",name:"Lentil tomato grain bowl",foods:["Lentils","Brown rice","Tomatoes","Carrots","Spinach"],cost:1,tags:["fiber"]},
+  {type:"lunch",name:"Shrimp avocado quinoa salad",foods:["Shrimp","Avocado","Quinoa","Mixed vegetables"],cost:3,tags:["protein","lowercarb"]},
+  {type:"lunch",name:"Tofu broccoli brown rice bowl",foods:["Tofu","Broccoli","Brown rice","Carrots"],cost:1,tags:["fiber","protein"]},
+  {type:"lunch",name:"Salmon avocado salad",foods:["Salmon","Avocado","Spinach","Tomatoes","Olive oil"],cost:3,tags:["protein","lowercarb","mediterranean"]},
+  {type:"lunch",name:"Turkey broccoli quinoa bowl",foods:["Turkey","Broccoli","Quinoa","Carrots"],cost:2,tags:["protein","fiber"]},
+  {type:"lunch",name:"Three-bean quinoa salad",foods:["Beans","Black beans","Quinoa","Tomatoes","Spinach"],cost:1,tags:["fiber"]},
+  {type:"lunch",name:"Chicken hummus veggie bowl",foods:["Chicken breast","Hummus","Spinach","Carrots","Tomatoes"],cost:2,tags:["protein","mediterranean"]},
+  {type:"lunch",name:"Tuna whole-grain veggie wrap",foods:["Tuna","Whole-grain tortillas","Spinach","Tomatoes","Hummus"],cost:2,tags:["protein"]},
+  {type:"lunch",name:"Lentil hummus quinoa bowl",foods:["Lentils","Hummus","Quinoa","Carrots"],cost:1,tags:["fiber","mediterranean"]},
+  {type:"lunch",name:"Tofu avocado spinach bowl",foods:["Tofu","Avocado","Spinach","Tomatoes","Quinoa"],cost:2,tags:["protein","lowercarb"]},
+  {type:"lunch",name:"Salmon quinoa veggie bowl",foods:["Salmon","Quinoa","Broccoli","Carrots"],cost:3,tags:["protein"]},
+  {type:"lunch",name:"Black bean hummus wrap",foods:["Black beans","Hummus","Whole-grain tortillas","Spinach"],cost:1,tags:["fiber","mediterranean"]},
 
-  {type:"dinner",name:"Salmon brown rice & broccoli",foods:["Salmon","Brown rice","Broccoli","Olive oil"]},
-  {type:"dinner",name:"Chicken sweet potato bowls",foods:["Chicken breast","Sweet potatoes","Spinach","Mixed vegetables"]},
-  {type:"dinner",name:"Lemon chicken veggie rice",foods:["Chicken breast","Brown rice","Mixed vegetables","Carrots","Olive oil"]},
-  {type:"dinner",name:"Shrimp vegetable stir-fry",foods:["Shrimp","Mixed vegetables","Broccoli","Brown rice"]},
-  {type:"dinner",name:"Turkey broccoli brown rice",foods:["Turkey","Broccoli","Brown rice","Carrots"]},
-  {type:"dinner",name:"Herb chicken & roasted vegetables",foods:["Chicken breast","Sweet potatoes","Broccoli","Carrots","Olive oil"]},
-  {type:"dinner",name:"Black bean sweet potato bowls",foods:["Black beans","Sweet potatoes","Avocado","Spinach"]},
-  {type:"dinner",name:"Chickpea veggie rice",foods:["Chickpeas","Brown rice","Mixed vegetables","Spinach"]},
-  {type:"dinner",name:"Tofu spinach quinoa bowl",foods:["Tofu","Spinach","Quinoa","Broccoli"]},
-  {type:"dinner",name:"Lentil tomato brown rice",foods:["Lentils","Brown rice","Tomatoes","Carrots"]},
-  {type:"dinner",name:"Chicken broccoli sweet potato",foods:["Chicken breast","Broccoli","Sweet potatoes","Spinach"]},
-  {type:"dinner",name:"Turkey hummus whole-grain wrap",foods:["Turkey","Hummus","Whole-grain tortillas","Spinach","Tomatoes"]},
-  {type:"dinner",name:"Tuna avocado whole-grain wrap",foods:["Tuna","Avocado","Whole-grain tortillas","Spinach"]},
-  {type:"dinner",name:"Tofu roasted vegetable bowls",foods:["Tofu","Sweet potatoes","Mixed vegetables","Broccoli","Olive oil"]},
-  {type:"dinner",name:"White bean tomato vegetable stew",foods:["Beans","Tomatoes","Carrots","Mixed vegetables","Olive oil"]}
+  {type:"dinner",name:"Salmon brown rice & broccoli",foods:["Salmon","Brown rice","Broccoli","Olive oil"],cost:3,tags:["protein","mediterranean"]},
+  {type:"dinner",name:"Chicken sweet potato bowls",foods:["Chicken breast","Sweet potatoes","Spinach","Mixed vegetables"],cost:2,tags:["protein","fiber"]},
+  {type:"dinner",name:"Lemon chicken veggie rice",foods:["Chicken breast","Brown rice","Mixed vegetables","Carrots","Olive oil"],cost:2,tags:["protein"]},
+  {type:"dinner",name:"Shrimp vegetable stir-fry",foods:["Shrimp","Mixed vegetables","Broccoli","Brown rice"],cost:3,tags:["protein"]},
+  {type:"dinner",name:"Turkey broccoli brown rice",foods:["Turkey","Broccoli","Brown rice","Carrots"],cost:2,tags:["protein","fiber"]},
+  {type:"dinner",name:"Herb chicken & roasted vegetables",foods:["Chicken breast","Sweet potatoes","Broccoli","Carrots","Olive oil"],cost:2,tags:["protein","fiber","mediterranean"]},
+  {type:"dinner",name:"Black bean sweet potato bowls",foods:["Black beans","Sweet potatoes","Avocado","Spinach"],cost:1,tags:["fiber","lowercarb"]},
+  {type:"dinner",name:"Chickpea veggie rice",foods:["Chickpeas","Brown rice","Mixed vegetables","Spinach"],cost:1,tags:["fiber"]},
+  {type:"dinner",name:"Tofu spinach quinoa bowl",foods:["Tofu","Spinach","Quinoa","Broccoli"],cost:1,tags:["protein","fiber"]},
+  {type:"dinner",name:"Lentil tomato brown rice",foods:["Lentils","Brown rice","Tomatoes","Carrots"],cost:1,tags:["fiber"]},
+  {type:"dinner",name:"Chicken broccoli sweet potato",foods:["Chicken breast","Broccoli","Sweet potatoes","Spinach"],cost:2,tags:["protein","fiber"]},
+  {type:"dinner",name:"Turkey hummus whole-grain wrap",foods:["Turkey","Hummus","Whole-grain tortillas","Spinach","Tomatoes"],cost:2,tags:["protein","mediterranean"]},
+  {type:"dinner",name:"Tuna avocado whole-grain wrap",foods:["Tuna","Avocado","Whole-grain tortillas","Spinach"],cost:2,tags:["protein","lowercarb"]},
+  {type:"dinner",name:"Tofu roasted vegetable bowls",foods:["Tofu","Sweet potatoes","Mixed vegetables","Broccoli","Olive oil"],cost:1,tags:["protein","fiber"]},
+  {type:"dinner",name:"White bean tomato vegetable stew",foods:["Beans","Tomatoes","Carrots","Mixed vegetables","Olive oil"],cost:1,tags:["fiber","mediterranean"]},
+  {type:"dinner",name:"Chicken quinoa broccoli bowl",foods:["Chicken breast","Quinoa","Broccoli","Spinach"],cost:2,tags:["protein","fiber"]},
+  {type:"dinner",name:"Turkey sweet potato veggie bowl",foods:["Turkey","Sweet potatoes","Mixed vegetables","Avocado"],cost:2,tags:["protein","fiber"]},
+  {type:"dinner",name:"Chickpea spinach tomato stew",foods:["Chickpeas","Spinach","Tomatoes","Carrots","Olive oil"],cost:1,tags:["fiber","mediterranean"]},
+  {type:"dinner",name:"Black bean quinoa stuffed peppers",foods:["Black beans","Quinoa","Tomatoes","Mixed vegetables"],cost:1,tags:["fiber"]},
+  {type:"dinner",name:"Salmon sweet potato spinach plate",foods:["Salmon","Sweet potatoes","Spinach","Avocado"],cost:3,tags:["protein","lowercarb"]},
+  {type:"dinner",name:"Shrimp quinoa veggie bowl",foods:["Shrimp","Quinoa","Broccoli","Avocado"],cost:3,tags:["protein"]},
+  {type:"dinner",name:"Tofu hummus whole-grain bowl",foods:["Tofu","Hummus","Whole-grain tortillas","Spinach","Tomatoes"],cost:1,tags:["protein","fiber","mediterranean"]}
 ];
 
 const mealFoodMap=Object.fromEntries(healthyMealLibrary.map(meal=>[meal.name,meal.foods]));
+const mealMetaMap=Object.fromEntries(healthyMealLibrary.map(meal=>[meal.name,meal]));
 const healthyMealsByType={
   breakfast:healthyMealLibrary.filter(meal=>meal.type==="breakfast"),
   lunch:healthyMealLibrary.filter(meal=>meal.type==="lunch"),
@@ -148,9 +165,7 @@ const healthyMealsByType={
 
 const preferenceMealTemplates={};
 healthyFoodChoices.forEach(food=>{
-  preferenceMealTemplates[food]=healthyMealLibrary
-    .filter(meal=>meal.foods.includes(food))
-    .map(meal=>meal.name);
+  preferenceMealTemplates[food]=healthyMealLibrary.filter(meal=>meal.foods.includes(food)).map(meal=>meal.name);
 });
 
 function preferredGroceriesStorageKey(){
@@ -167,9 +182,7 @@ function loadPreferredGroceries(){
     const saved=JSON.parse(localStorage.getItem(preferredGroceriesStorageKey()) || "[]");
     preferredGroceries = new Set(saved.filter(item=>healthyFoodChoices.includes(item) && !foodIsExcluded(item,selectedDietaryExclusions())));
   }catch{ preferredGroceries = new Set(); }
-  document.querySelectorAll("[data-preferred-grocery]").forEach(box=>{
-    box.checked = preferredGroceries.has(box.dataset.preferredGrocery);
-  });
+  document.querySelectorAll("[data-preferred-grocery]").forEach(box=>box.checked=preferredGroceries.has(box.dataset.preferredGrocery));
   updatePreferredGroceryCount();
 }
 function loadDietaryExclusions(){
@@ -177,13 +190,11 @@ function loadDietaryExclusions(){
     const saved=JSON.parse(localStorage.getItem(dietaryExclusionsStorageKey()) || "[]");
     dietaryExclusions = new Set(saved.filter(item=>dietaryExclusionChoices.includes(item)));
   }catch{ dietaryExclusions = new Set(); }
-  document.querySelectorAll("[data-dietary-exclusion]").forEach(box=>{
-    box.checked = dietaryExclusions.has(box.dataset.dietaryExclusion);
-  });
+  document.querySelectorAll("[data-dietary-exclusion]").forEach(box=>box.checked=dietaryExclusions.has(box.dataset.dietaryExclusion));
   document.querySelectorAll("[data-preferred-grocery]").forEach(box=>{
     if(foodIsExcluded(box.dataset.preferredGrocery,selectedDietaryExclusions())) box.checked=false;
   });
-  preferredGroceries = new Set(selectedPreferredGroceries());
+  preferredGroceries=new Set(selectedPreferredGroceries());
   updatePreferredGroceryCount();
   updateDietaryExclusionCount();
 }
@@ -197,24 +208,24 @@ function selectedPreferredGroceries(){
     .slice(0,12);
 }
 function savePreferredGroceries(){
-  preferredGroceries = new Set(selectedPreferredGroceries());
-  localStorage.setItem(preferredGroceriesStorageKey(), JSON.stringify(Array.from(preferredGroceries)));
+  preferredGroceries=new Set(selectedPreferredGroceries());
+  localStorage.setItem(preferredGroceriesStorageKey(),JSON.stringify(Array.from(preferredGroceries)));
   updatePreferredGroceryCount();
 }
 function saveDietaryExclusions(){
-  dietaryExclusions = new Set(selectedDietaryExclusions());
+  dietaryExclusions=new Set(selectedDietaryExclusions());
   document.querySelectorAll("[data-preferred-grocery]").forEach(box=>{
     if(foodIsExcluded(box.dataset.preferredGrocery,[...dietaryExclusions])) box.checked=false;
   });
-  preferredGroceries = new Set(selectedPreferredGroceries());
-  localStorage.setItem(dietaryExclusionsStorageKey(), JSON.stringify(Array.from(dietaryExclusions)));
-  localStorage.setItem(preferredGroceriesStorageKey(), JSON.stringify(Array.from(preferredGroceries)));
+  preferredGroceries=new Set(selectedPreferredGroceries());
+  localStorage.setItem(dietaryExclusionsStorageKey(),JSON.stringify(Array.from(dietaryExclusions)));
+  localStorage.setItem(preferredGroceriesStorageKey(),JSON.stringify(Array.from(preferredGroceries)));
   updatePreferredGroceryCount();
   updateDietaryExclusionCount();
 }
 function updatePreferredGroceryCount(){
   const count=document.getElementById("preferred-grocery-count");
-  if(count) count.textContent=selectedPreferredGroceries().length + " / 12";
+  if(count) count.textContent=selectedPreferredGroceries().length+" / 12";
 }
 function updateDietaryExclusionCount(){
   const count=document.getElementById("dietary-exclusion-count");
@@ -222,15 +233,16 @@ function updateDietaryExclusionCount(){
 }
 function mealUsesPreference(meal,item){
   const foods=mealFoodMap[meal];
-  return Array.isArray(foods) ? foods.includes(item) : false;
+  return Array.isArray(foods) && foods.includes(item);
 }
-function scoreMealForPreferences(meal, selected){
-  const foods=mealFoodMap[meal] || [];
-  let score=0;
-  selected.forEach(item=>{ if(foods.includes(item)) score += 25; });
-  return score;
+function mealMatchesTarget(meal,target){
+  const tags=(mealMetaMap[meal]?.tags || []);
+  return tags.includes(target);
 }
-function isMealExcluded(meal, exclusions){
+function mealCostTier(meal){
+  return mealMetaMap[meal]?.cost || 2;
+}
+function isMealExcluded(meal,exclusions){
   const foods=mealFoodMap[meal] || [];
   if(exclusions.includes("Poultry") && foods.some(food=>["Chicken breast","Turkey"].includes(food))) return true;
   if(exclusions.includes("Dairy") && foods.includes("Greek yogurt")) return true;
@@ -245,57 +257,95 @@ function isMealCompatible(meal,diet,exclusions=[]){
   if(diet==="vegetarian" && /(chicken|turkey|salmon|tuna|shrimp)/i.test(meal)) return false;
   return !isMealExcluded(meal,exclusions);
 }
-function personalizeWeek(basePlan, diet, selected, exclusions=[]){
-  const emptyWeek=Array.from({length:7},()=>[null,null,null]);
-  const used=new Set();
+function targetTagForPlan(requestedTarget){
+  return requestedTarget==="highprotein" ? "protein"
+    : requestedTarget==="lowercarb" ? "lowercarb"
+    : requestedTarget==="higherfiber" ? "fiber"
+    : requestedTarget==="mediterranean" ? "mediterranean"
+    : "";
+}
+function budgetTargetTier(budget){
+  return budget==="tight" ? 1 : budget==="low" ? 1.5 : budget==="high" ? 2.5 : budget==="premium" ? 3 : 2;
+}
+function scorePlannerMeal(meal,selected,remaining,target,budget,usedCounts,recentMeals,optimizer){
+  const foods=mealFoodMap[meal] || [];
+  let score=0;
+  const preferenceMatches=selected.filter(food=>foods.includes(food)).length;
+  const newCoverage=remaining.filter(food=>foods.includes(food)).length;
+  score += preferenceMatches*28 + newCoverage*45;
+  if(target && mealMatchesTarget(meal,target)) score += 18;
+  const tier=budgetTargetTier(budget);
+  score += Math.max(0,6-Math.abs(mealCostTier(meal)-tier)*5);
+  const used=usedCounts[meal] || 0;
+  score -= used*55;
+  if(recentMeals.includes(meal)) score -= 30;
+  if(optimizer && recentMeals.length){
+    const shared=recentMeals.flatMap(name=>mealFoodMap[name]||[]).filter(food=>foods.includes(food));
+    score += Math.min(3,new Set(shared).size)*5;
+  }
+  return score;
+}
+function chooseMealForSlot(type,selected,remaining,target,budget,usedCounts,recentMeals,diet,exclusions,optimizer,baseMeal){
+  let pool=healthyMealsByType[type].filter(meal=>isMealCompatible(meal.name,diet,exclusions));
+  if(baseMeal && mealFoodMap[baseMeal] && isMealCompatible(baseMeal,diet,exclusions)) pool=[{name:baseMeal,foods:mealFoodMap[baseMeal],cost:mealCostTier(baseMeal),tags:mealMetaMap[baseMeal]?.tags||[]},...pool];
+  const dedup=new Map(pool.map(meal=>[meal.name,meal]));
+  pool=[...dedup.values()];
+  pool.sort((a,b)=>{
+    const sa=scorePlannerMeal(a.name,selected,remaining,target,budget,usedCounts,recentMeals,optimizer);
+    const sb=scorePlannerMeal(b.name,selected,remaining,target,budget,usedCounts,recentMeals,optimizer);
+    return sb-sa;
+  });
+  return pool[0] || null;
+}
+function personalizeWeek(basePlan,diet,selected,exclusions=[],target="",budget="mid",optimizer=false){
+  const week=Array.from({length:7},()=>[null,null,null]);
+  const usedCounts={};
   const covered=new Set();
-  const slotTypes=["breakfast","lunch","dinner"];
+  const types=["breakfast","lunch","dinner"];
 
-  if(selected.length){
-    const orderedSelected=[...selected].sort((a,b)=>{
-      const ac=healthyMealLibrary.filter(meal=>meal.foods.includes(a) && isMealCompatible(meal.name,diet,exclusions)).length;
-      const bc=healthyMealLibrary.filter(meal=>meal.foods.includes(b) && isMealCompatible(meal.name,diet,exclusions)).length;
-      return ac-bc;
-    });
+  const compatibleSelected=selected.filter(food=>!foodIsExcluded(food,exclusions));
+  const selectionOrder=[...compatibleSelected].sort((a,b)=>{
+    const ac=healthyMealLibrary.filter(meal=>meal.foods.includes(a)&&isMealCompatible(meal.name,diet,exclusions)).length;
+    const bc=healthyMealLibrary.filter(meal=>meal.foods.includes(b)&&isMealCompatible(meal.name,diet,exclusions)).length;
+    return ac-bc;
+  });
 
-    for(const item of orderedSelected){
-      const possibleSlots=[];
-      for(let day=0;day<7;day++){
-        for(let slot=0;slot<3;slot++){
-          if(emptyWeek[day][slot]!==null) continue;
-          const type=slotTypes[slot];
-          healthyMealsByType[type].forEach(meal=>{
-            if(used.has(meal.name) || !isMealCompatible(meal.name,diet,exclusions) || !meal.foods.includes(item)) return;
-            const newCoverage=selected.filter(food=>!covered.has(food) && meal.foods.includes(food)).length;
-            const score=newCoverage*40 + scoreMealForPreferences(meal.name,selected) + (slot===0 ? 2 : 0) - day;
-            possibleSlots.push({day,slot,meal,score});
-          });
+  // First pass: each chosen food gets a real slot whenever a compatible meal exists.
+  for(const food of selectionOrder){
+    let best=null;
+    for(let day=0;day<7;day++){
+      for(let slot=0;slot<3;slot++){
+        if(week[day][slot]) continue;
+        const type=types[slot];
+        const candidates=healthyMealsByType[type].filter(meal=>!usedCounts[meal.name]&&isMealCompatible(meal.name,diet,exclusions)&&meal.foods.includes(food));
+        for(const meal of candidates){
+          const newCoverage=selected.filter(item=>!covered.has(item)&&meal.foods.includes(item)).length;
+          const score=newCoverage*80 + scorePlannerMeal(meal.name,selected,selected.filter(item=>!covered.has(item)),target,budget,usedCounts,week[day].filter(Boolean),optimizer) - day;
+          if(!best || score>best.score) best={day,slot,meal,score};
         }
       }
-      possibleSlots.sort((a,b)=>b.score-a.score || a.day-b.day || a.slot-b.slot);
-      if(possibleSlots[0]){
-        const pick=possibleSlots[0];
-        emptyWeek[pick.day][pick.slot]=pick.meal.name;
-        used.add(pick.meal.name);
-        pick.meal.foods.forEach(food=>{ if(selected.includes(food)) covered.add(food); });
+    }
+    if(best){
+      week[best.day][best.slot]=best.meal.name;
+      usedCounts[best.meal.name]=(usedCounts[best.meal.name]||0)+1;
+      best.meal.foods.forEach(item=>{if(selected.includes(item))covered.add(item);});
+    }
+  }
+
+  // Second pass: fill every remaining breakfast/lunch/dinner slot while preserving variety.
+  for(let day=0;day<7;day++){
+    for(let slot=0;slot<3;slot++){
+      if(week[day][slot]) continue;
+      const pick=chooseMealForSlot(types[slot],selected,selected.filter(item=>!covered.has(item)),target,budget,usedCounts,week[day].filter(Boolean),diet,exclusions,optimizer,basePlan?.[day]?.[slot]);
+      if(pick){
+        week[day][slot]=pick.name;
+        usedCounts[pick.name]=(usedCounts[pick.name]||0)+1;
+        (mealFoodMap[pick.name]||[]).forEach(item=>{if(selected.includes(item))covered.add(item);});
       }
     }
   }
 
-  for(let day=0;day<7;day++){
-    for(let slot=0;slot<3;slot++){
-      if(emptyWeek[day][slot]) continue;
-      const type=slotTypes[slot];
-      const baseMeal=basePlan?.[day]?.[slot];
-      const pool=[...healthyMealsByType[type],...(baseMeal ? [{name:baseMeal,foods:mealFoodMap[baseMeal]||[]}] : [])]
-        .filter(meal=>!used.has(meal.name) && isMealCompatible(meal.name,diet,exclusions));
-      pool.sort((a,b)=>scoreMealForPreferences(b.name,selected)-scoreMealForPreferences(a.name,selected));
-      const pick=pool[0];
-      emptyWeek[day][slot]=pick ? pick.name : "Healthy grain & veggie bowl";
-      used.add(emptyWeek[day][slot]);
-    }
-  }
-  return emptyWeek;
+  return week;
 }
 
 const groceryRules=[
@@ -513,13 +563,15 @@ function generate(){
   if(isPremium && optimizerCheckbox?.checked) targetNote+=" · ingredient reuse optimized";
   const selectedPreferences=selectedPreferredGroceries();
   const selectedExclusions=selectedDietaryExclusions();
-  currentWeek=personalizeWeek(plan,diet,selectedPreferences,selectedExclusions);
+  const optimizerEnabled=isPremium && optimizerCheckbox?.checked===true;
+  const selectedTarget=targetTagForPlan(requestedTarget);
+  currentWeek=personalizeWeek(plan,diet,selectedPreferences,selectedExclusions,selectedTarget,budget,optimizerEnabled);
   const days=["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
   const mealTypes=["Breakfast","Lunch","Dinner"];
   const covered=selectedPreferences.filter(food=>currentWeek.flat().some(meal=>mealUsesPreference(meal,food)));
-  const coveredText=selectedPreferences.length
-    ? `<div class="preference-summary"><strong>Built around your foods:</strong> ${escapeHtml(covered.join(", "))}${covered.length<selectedPreferences.length ? ` <span>(${selectedPreferences.length-covered.length} selection${selectedPreferences.length-covered.length===1?"":"s"} could not be used.)</span>` : ""}</div>`
-    : `<div class="preference-summary muted">Pick up to 12 healthy foods above and SmartMeal will build the week around your selections.</div>`;
+  const coveredText=selectedPreferences.length || selectedExclusions.length
+    ? `<div class="preference-summary">${selectedPreferences.length ? `<strong>Built around your foods:</strong> ${escapeHtml(covered.join(", "))} <span>· ${covered.length}/${selectedPreferences.length} selected foods used</span>` : ""}${selectedExclusions.length ? `<small class="preference-exclusions"><strong>Avoiding:</strong> ${escapeHtml(selectedExclusions.join(", "))}</small>` : ""}</div>`
+    : `<div class="preference-summary muted">Choose healthy foods above and SmartMeal will build your 7-day plan around them.</div>`;
   document.getElementById("result").innerHTML=
     `<h3>Your personalized 7-day week <span style="color:#2e7d50">· about $${cost}</span><small>${escapeHtml(targetNote)}</small></h3>
     ${coveredText}
