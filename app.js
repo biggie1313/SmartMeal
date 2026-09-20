@@ -358,11 +358,6 @@ function generate(){
     preferredWrap.addEventListener("change", (event) => {
       if (!event.target.matches("[data-preferred-grocery]")) return;
       const checked = selectedPreferredGroceries();
-      if (checked.length > 8) {
-        event.target.checked = false;
-        showToast("Choose up to 8 foods you like.");
-        return;
-      }
       savePreferredGroceries();
     });
   }
