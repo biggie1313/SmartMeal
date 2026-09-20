@@ -831,6 +831,33 @@ function updatePremiumUI(){
     status.textContent = isPremium ? (subscriptionPlan === "family" ? "✨ Family Premium" : "✨ Premium") : "Free";
   }
   if (dashboardLink) dashboardLink.style.display = currentUserId ? "inline" : "none";
+  const manage=document.getElementById("dashboard-manage");
+  const familyButton=document.getElementById("dashboard-family-button");
+  if(manage) manage.style.display=isPremium ? "inline-flex" : "none";
+  if(familyButton) familyButton.style.display=subscriptionPlan==="family" ? "inline-flex" : "none";
+}
+
+function showAccountPlanner(){
+  document.getElementById("app")?.scrollIntoView({behavior:"smooth"});
+  setTimeout(()=>generate(),250);
+}
+function showSavedPlans(){
+  if(!isPremium){
+    showToast("Saved weeks are a Premium feature.");
+    document.getElementById("pricing")?.scrollIntoView({behavior:"smooth"});
+    return;
+  }
+  const section=document.getElementById("saved-plans");
+  section?.scrollIntoView({behavior:"smooth",block:"start"});
+}
+function showFavoriteRecipes(){
+  if(!isPremium){
+    showToast("Favorite recipes are a Premium feature.");
+    document.getElementById("pricing")?.scrollIntoView({behavior:"smooth"});
+    return;
+  }
+  const section=document.getElementById("favorite-meals");
+  section?.scrollIntoView({behavior:"smooth",block:"start"});
 }
 
 function updateDashboardUI(){
@@ -1423,6 +1450,7 @@ async function loadSavedPlans(){
     if (!user || !isPremium) {
       savedSection.style.display = "none";
       list.innerHTML = "";
+      list._plans = new Map();
       updateDashboardUI();
       return;
     }
