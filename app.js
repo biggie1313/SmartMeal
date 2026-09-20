@@ -387,7 +387,7 @@ function swapMeal(dayIndex, mealIndex){
   if (button) {
     button.dataset.meal = next;
     button.textContent = next + (isPremium ? " ☆" : "");
-    const favorite = button.parentElement?.parentElement?.querySelector(".meal-favorite");
+    const favorite = button.parentElement?.querySelector(".meal-favorite");
     if (favorite) { favorite.dataset.favoriteMeal = next; favorite.textContent = favoriteMeals.has(next) ? "★" : "☆"; }
   }
   showToast("Meal swapped to " + next + ".");
