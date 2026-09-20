@@ -387,17 +387,15 @@ const groceryRules=[
 ];
 
 function ingredientsForMeal(meal){
+  const exact=mealFoodMap[meal];
+  if(Array.isArray(exact) && exact.length) return [...exact];
   const found=[];
   groceryRules.forEach(rule=>{
     if(rule.pattern.test(meal)){
       rule.items.forEach(item=>{ if(!found.includes(item)) found.push(item); });
     }
   });
-  if(found.length===0){
-    if(/leftover/i.test(meal)) return ["Brown rice","Mixed vegetables"];
-    return ["Mixed vegetables"];
-  }
-  if(found.some(x=>["Chicken breast","Turkey","Tofu","Shrimp","Tuna","Salmon"].includes(x)) && !found.includes("Mixed vegetables")) found.push("Mixed vegetables");
+  if(found.length===0) return /leftover/i.test(meal) ? ["Brown rice","Mixed vegetables"] : ["Mixed vegetables"];
   return found;
 }
 
@@ -573,7 +571,7 @@ function generate(){
     ? `<div class="preference-summary">${selectedPreferences.length ? `<strong>Built around your foods:</strong> ${escapeHtml(covered.join(", "))} <span>· ${covered.length}/${selectedPreferences.length} selected foods used</span>` : ""}${selectedExclusions.length ? `<small class="preference-exclusions"><strong>Avoiding:</strong> ${escapeHtml(selectedExclusions.join(", "))}</small>` : ""}</div>`
     : `<div class="preference-summary muted">Choose healthy foods above and SmartMeal will build your 7-day plan around them.</div>`;
   document.getElementById("result").innerHTML=
-    `<h3>Your personalized 7-day week <span style="color:#2e7d50">· about $${cost}</span><small>${escapeHtml(targetNote)}</small></h3>
+    `<h3>Your personalized 7-day week <span style="color:#2e7d50">· 21 meals</span><small>3 meals per day · about ${cost}${escapeHtml(targetNote)}</small></h3>
     ${coveredText}
     <div class="week">${currentWeek.map((d,i)=>
       `<div class="day"><b>${days[i]}</b>${d.map((m,slot)=>
