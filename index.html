@@ -47,6 +47,39 @@
 <label>Weekly budget<select id="budget"><option value="tight">$50–$70</option><option value="low">$70–$90</option><option value="mid" selected>$90–$120</option><option value="high">$120–$160</option><option value="premium">$160+</option></select></label>
 <label>Style<select id="diet"><option value="any">Balanced</option><option value="vegetarian">Vegetarian</option><option value="highprotein">High protein</option><option value="lowercarb">Lower carb</option><option value="mediterranean">Mediterranean</option><option value="familyfriendly">Family-friendly</option></select></label>
 <button class="btn" onclick="generate()">Generate my plan</button></div>
+<div class="preference-box">
+  <div class="preference-head">
+    <div><strong>Foods you like</strong><p>Pick the groceries you want SmartMeal to prioritize in your personalized week.</p></div>
+    <div class="preference-count"><span id="preferred-grocery-count">0</span> selected</div>
+  </div>
+  <div id="grocery-preferences" class="grocery-preferences">
+    <label><input type="checkbox" data-preferred-grocery="Oats"> Oats</label>
+    <label><input type="checkbox" data-preferred-grocery="Bananas"> Bananas</label>
+    <label><input type="checkbox" data-preferred-grocery="Eggs"> Eggs</label>
+    <label><input type="checkbox" data-preferred-grocery="Bread"> Bread</label>
+    <label><input type="checkbox" data-preferred-grocery="Greek yogurt"> Greek yogurt</label>
+    <label><input type="checkbox" data-preferred-grocery="Berries"> Berries</label>
+    <label><input type="checkbox" data-preferred-grocery="Chicken breast"> Chicken breast</label>
+    <label><input type="checkbox" data-preferred-grocery="Rice"> Rice</label>
+    <label><input type="checkbox" data-preferred-grocery="Tortillas"> Tortillas</label>
+    <label><input type="checkbox" data-preferred-grocery="Ground turkey/beef"> Turkey / beef</label>
+    <label><input type="checkbox" data-preferred-grocery="Beans"> Beans</label>
+    <label><input type="checkbox" data-preferred-grocery="Pasta"> Pasta</label>
+    <label><input type="checkbox" data-preferred-grocery="Mixed vegetables"> Mixed vegetables</label>
+    <label><input type="checkbox" data-preferred-grocery="Carrots"> Carrots</label>
+    <label><input type="checkbox" data-preferred-grocery="Hummus"> Hummus</label>
+    <label><input type="checkbox" data-preferred-grocery="Apples"> Apples</label>
+    <label><input type="checkbox" data-preferred-grocery="Peanut butter"> Peanut butter</label>
+    <label><input type="checkbox" data-preferred-grocery="Fruit"> Fruit</label>
+    <label><input type="checkbox" data-preferred-grocery="Granola"> Granola</label>
+    <label><input type="checkbox" data-preferred-grocery="Cheese"> Cheese</label>
+    <label><input type="checkbox" data-preferred-grocery="Chickpeas"> Chickpeas</label>
+    <label><input type="checkbox" data-preferred-grocery="Lentils"> Lentils</label>
+    <label><input type="checkbox" data-preferred-grocery="Tofu"> Tofu</label>
+    <label><input type="checkbox" data-preferred-grocery="Avocado"> Avocado</label>
+  </div>
+  <button class="text-link preference-clear" type="button" id="clear-preferred-groceries">Clear selections</button>
+</div>
 <div id="premium-tools" class="premium-tools" style="display:none;margin:18px 0;padding:16px;border:1px solid #ddd;border-radius:14px">
   <div style="display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap">
     <div><b>✨ Premium tools</b><div style="font-size:14px;opacity:.75">Fine-tune your plan with advanced options.</div></div>
