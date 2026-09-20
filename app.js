@@ -869,6 +869,7 @@ function updateDashboardUI(){
   }
   dashboard.style.display="block";
   const planEl=document.getElementById("dashboard-plan");
+  const planPill=document.getElementById("dashboard-plan-pill");
   const familyEl=document.getElementById("dashboard-family");
   const savedEl=document.getElementById("dashboard-saved-count");
   const favoriteEl=document.getElementById("dashboard-favorite-count");
@@ -876,6 +877,7 @@ function updateDashboardUI(){
   const sessionText=document.getElementById("dashboard-session-text");
   const userLabel=document.getElementById("dashboard-user-label");
   if(planEl) planEl.textContent=isPremium ? (subscriptionPlan==="family" ? "Family" : "Premium") : "Free";
+  if(planPill) planPill.textContent=isPremium ? (subscriptionPlan==="family" ? "✨ Family Premium" : "✨ Premium") : "Free";
   if(familyEl) familyEl.textContent=subscriptionPlan==="family" && familyHousehold ? (familyHousehold.household_name || "Household ready") : (subscriptionPlan==="family" ? "Set up your household" : "Not included");
   if(savedEl) savedEl.textContent=String(document.getElementById("saved-plans-list")?._plans?.size || 0);
   if(favoriteEl) favoriteEl.textContent=String(favoriteMeals.size);
