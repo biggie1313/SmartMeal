@@ -11,7 +11,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-<div class="announcement"><div>Weekly meal planning, built around your life.</div><span>Free to start · Premium $7.99/mo · Family $12.99/mo</span></div><header class="nav"><div class="brand"><span class="brand-mark" aria-hidden="true">S</span><span>SmartMeal</span></div><nav><a href="#how">How it works</a><a href="#family">Family</a><a href="#pricing">Pricing</a><a href="#faq">FAQ</a><span id="account-status" class="pill" style="display:none"></span><button id="signup-button" class="btn small" onclick="openAuth('signup')">Try it free</button><button id="signout-button" class="btn small outline" style="display:none" onclick="signOut()">Sign out</button></nav></header>
+<div class="announcement"><div>Weekly meal planning, built around your life.</div><span>Free to start · Premium $7.99/mo · Family $12.99/mo</span></div><header class="nav"><div class="brand"><span class="brand-mark" aria-hidden="true">S</span><span>SmartMeal</span></div><nav><a href="#how">How it works</a><a href="#family">Family</a><a href="#pricing">Pricing</a><a href="#faq">FAQ</a><a id="dashboard-link" href="#account-dashboard" style="display:none">Dashboard</a><span id="account-status" class="pill" style="display:none"></span><button id="signup-button" class="btn small" onclick="openAuth('signup')">Try it free</button><button id="signout-button" class="btn small outline" style="display:none" onclick="signOut()">Sign out</button></nav></header>
 
 <section class="hero">
 <div class="hero-copy">
@@ -143,6 +143,31 @@
     <button class="btn outline" type="button" onclick="saveCurrentPlan()">♡ Save this week</button><button class="btn outline" type="button" onclick="openCustomerPortal()">Manage subscription</button>
   </div>
 </div>
+<section id="account-dashboard" class="account-dashboard" style="display:none" aria-label="SmartMeal account dashboard">
+  <div class="dashboard-head">
+    <div>
+      <span class="eyebrow">MY SMARTMEAL</span>
+      <h3 id="dashboard-user-label">Your SmartMeal account</h3>
+      <p id="dashboard-session-text">Your saved weeks and favorite recipes stay connected to this account.</p>
+      <small id="dashboard-email"></small>
+    </div>
+    <span id="dashboard-plan" class="pill">Free</span>
+  </div>
+  <div class="dashboard-stats">
+    <div class="dashboard-stat"><span>Plan</span><strong id="dashboard-plan">Free</strong></div>
+    <div class="dashboard-stat"><span>Saved weeks</span><strong id="dashboard-saved-count">0</strong></div>
+    <div class="dashboard-stat"><span>Favorite recipes</span><strong id="dashboard-favorite-count">0</strong></div>
+    <div class="dashboard-stat"><span>Family</span><strong id="dashboard-family">Not included</strong></div>
+  </div>
+  <div class="dashboard-actions">
+    <button class="btn small" type="button" onclick="showAccountPlanner()">＋ Build a new week</button>
+    <button class="btn outline small" type="button" onclick="showSavedPlans()">Saved weeks</button>
+    <button class="btn outline small" type="button" onclick="showFavoriteRecipes()">Favorite recipes</button>
+    <button id="dashboard-manage" class="btn outline small" type="button" style="display:none" onclick="openCustomerPortal()">Manage subscription</button>
+    <button id="dashboard-family" class="btn outline small" type="button" style="display:none" onclick="document.getElementById('family')?.scrollIntoView({behavior:'smooth'})">Open Family</button>
+  </div>
+</section>
+
 <div id="premium-upsell" class="premium-upsell" style="margin:18px 0;padding:16px;border:1px dashed #bbb;border-radius:14px">
   <b>🔒 Premium tools are locked</b>
   <div style="margin:6px 0 12px">Upgrade to unlock nutrition targets, ingredient-reuse optimization, and saved favorites.</div>
@@ -248,7 +273,7 @@
   </div>
 </div>
 
-<script src="app.js?v=20260920-recipes-v4"></script>
+<script src="app.js?v=20260920-dashboard-v1"></script>
 
 <div id="recipe-modal" class="recipe-modal" aria-hidden="true">
   <div class="recipe-card" role="dialog" aria-modal="true" aria-labelledby="recipe-title">
