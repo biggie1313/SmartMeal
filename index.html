@@ -3,16 +3,16 @@
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>SmartMeal — Eat well. Spend less.</title>
-<link rel="stylesheet" href="styles.css?v=20260920-finish-pass5">
+<link rel="stylesheet" href="styles.css?v=20260920-family-pass1">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 <header class="nav"><div class="brand">🥕 <span>SmartMeal</span></div><nav><a href="#how">How it works</a><a href="#pricing">Pricing</a><span id="account-status" class="pill" style="display:none"></span><button id="signup-button" class="btn small" onclick="openAuth('signup')">Try it free</button><button id="signout-button" class="btn small outline" style="display:none" onclick="signOut()">Sign out</button></nav></header>
 
 <section class="hero">
-<div class="hero-copy"><span class="pill">✨ Your week, planned in seconds</span>
+<div class="hero-copy"><span class="pill">✨ Weekly meal planning made simple</span>
 <h1>Eat well.<br><em>Spend less.</em></h1>
-<p>SmartMeal builds a personalized weekly meal plan and grocery list around your family, budget and preferences—so you stop guessing what to cook.</p>
+<p>SmartMeal builds a practical weekly meal plan and grocery list around your household, budget and preferences—so dinner takes less planning.</p>
 <div class="hero-actions"><button class="btn" onclick="showApp()">Build my free plan →</button><a href="#pricing" class="text-link">See premium features</a></div>
 <div class="trust">✓ No credit card &nbsp; ✓ Free weekly plan &nbsp; ✓ Cancel anytime</div></div>
 <div class="hero-card"><div class="mini-top"><span>This week</span><b>Budget: $90</b></div><div class="progress"><span></span></div>
@@ -20,10 +20,10 @@
 <div class="save">♻️ 8 ingredients reused this week</div></div>
 </section>
 
-<section id="how" class="section"><div class="center"><span class="eyebrow">HOW IT WORKS</span><h2>Less planning. Less waste. More dinner.</h2><p>SmartMeal turns a few preferences into a practical plan your whole household can actually follow.</p></div>
-<div class="steps"><div><span>01</span><h3>Tell us what matters</h3><p>Family size, budget, diet, dislikes and how often you want to cook.</p></div><div><span>02</span><h3>Get your week</h3><p>SmartMeal creates meals that share ingredients so your cart stays simple.</p></div><div><span>03</span><h3>Shop & cook</h3><p>Use your organized grocery list and check items off as you shop.</p></div></div></section>
+<section id="how" class="section"><div class="center"><span class="eyebrow">HOW IT WORKS</span><h2>A simpler week starts with one plan.</h2><p>Choose a household size, budget and meal style. SmartMeal turns those choices into a ready-to-use week.</p></div>
+<div class="steps"><div><span>01</span><h3>Set your preferences</h3><p>Pick your household size, budget and meal style.</p></div><div><span>02</span><h3>Get your week</h3><p>Get seven days of meals designed around your choices.</p></div><div><span>03</span><h3>Shop & cook</h3><p>Work from one organized grocery checklist and save your favorites.</p></div></div></section>
 
-<section class="app-section" id="app"><div class="app-wrap"><div><span class="eyebrow">FREE PLANNER</span><h2>Build your first week</h2><p>Create a free account to save your plan and unlock Premium later.</p></div>
+<section class="app-section" id="app"><div class="app-wrap"><div><span class="eyebrow">FREE PLANNER</span><h2>Build your first week</h2><p>Create a free account to build your week. Upgrade only when you want more control.</p></div>
 <div class="planner"><div class="controls"><label>Household<select id="people"><option>1</option><option>2</option><option selected>4</option><option>6</option><option>8</option></select></label>
 <label>Weekly budget<select id="budget"><option value="low">$60–$80</option><option value="mid" selected>$80–$110</option><option value="high">$110+</option></select></label>
 <label>Style<select id="diet"><option value="any">Balanced</option><option value="vegetarian">Vegetarian</option><option value="highprotein">High protein</option></select></label>
@@ -42,7 +42,7 @@
 <div id="premium-upsell" class="premium-upsell" style="margin:18px 0;padding:16px;border:1px dashed #bbb;border-radius:14px">
   <b>🔒 Premium tools are locked</b>
   <div style="margin:6px 0 12px">Upgrade to unlock nutrition targets, ingredient-reuse optimization, and saved favorites.</div>
-  <button class="btn small" type="button" onclick="fakeCheckout()">Unlock Premium — $7.99/month</button>
+  <button class="btn small" type="button" onclick="fakeCheckout()">Unlock Premium · $7.99/month</button>
 </div>
 <div id="result" class="result"></div>
 
@@ -59,10 +59,58 @@
   <div id="favorite-meals-list" class="favorite-meals-list"></div>
 </div></div></div></section>
 
+<section id="family" class="section family-section">
+  <div class="center"><span class="eyebrow">FAMILY HOUSEHOLD</span><h2>Plan together, shop together.</h2><p>Family subscribers can create a shared household, invite members with a simple code, and keep one grocery list and one set of meal preferences in sync.</p></div>
+  <div id="family-tools" class="family-tools" style="display:none">
+    <div id="family-onboarding" class="family-card">
+      <h3>Create or join your household</h3>
+      <p>Choose a name for your household, or enter an invite code from someone already in your family account.</p>
+      <div class="family-actions">
+        <div class="family-action-box">
+          <label>Household name<input id="family-name" type="text" maxlength="60" placeholder="The Smith family"></label>
+          <button class="btn small" type="button" onclick="createFamilyHousehold()">Create household</button>
+        </div>
+        <div class="family-action-box">
+          <label>Invite code<input id="family-join-code" type="text" maxlength="8" placeholder="AB12CD34"></label>
+          <button class="btn outline small" type="button" onclick="joinFamilyHousehold()">Join household</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="family-dashboard" class="family-card" style="display:none">
+      <div class="family-dashboard-head">
+        <div><span class="eyebrow">YOUR HOUSEHOLD</span><h3 id="family-household-name">My Family</h3><p id="family-member-count">0 members</p></div>
+        <div class="family-invite"><span>Invite code</span><strong id="family-invite-code">--------</strong><button class="btn outline small" type="button" onclick="copyFamilyInviteCode()">Copy code</button></div>
+      </div>
+
+      <div class="family-grid">
+        <div class="family-panel">
+          <h4>Family preferences</h4>
+          <label>Meal style<select id="family-diet"><option value="balanced">Balanced</option><option value="vegetarian">Vegetarian</option><option value="highprotein">High protein</option><option value="lowercarb">Lower carb</option></select></label>
+          <label>Notes<textarea id="family-notes" rows="4" maxlength="500" placeholder="Things everyone should know about meals…"></textarea></label>
+          <button class="btn small" type="button" onclick="saveFamilyPreferences()">Save preferences</button>
+        </div>
+
+        <div class="family-panel">
+          <h4>Shared grocery list</h4>
+          <div class="family-grocery-add"><input id="family-grocery-input" type="text" maxlength="100" placeholder="Add milk, apples, rice…"><button class="btn small" type="button" onclick="addFamilyGroceryItem()">Add</button></div>
+          <div id="family-grocery-list" class="family-grocery-list"></div>
+        </div>
+
+        <div class="family-panel">
+          <h4>Household members</h4>
+          <div id="family-members-list" class="family-members-list"></div>
+        </div>
+      </div>
+      <button class="btn outline small" type="button" onclick="loadFamilyHousehold()">↻ Refresh household</button>
+    </div>
+  </div>
+</section>
+
 <section id="pricing" class="section pricing"><div class="center"><span class="eyebrow">PRICING</span><h2>Start free. Upgrade when SmartMeal saves you time.</h2></div>
 <div class="plans"><div class="plan"><h3>Free</h3><div class="price">$0<span>/month</span></div><p>For trying SmartMeal.</p><ul><li>1 weekly plan</li><li>Grocery checklist</li><li>Basic preferences</li></ul><button class="btn outline" onclick="showApp()">Start free</button></div>
-<div class="plan featured"><div class="popular">MOST POPULAR</div><h3>Premium</h3><div class="price">$7.99<span>/month</span></div><p>For busy households.</p><ul><li>Unlimited meal plans</li><li>Ingredient reuse optimizer</li><li>Favorites & substitutions</li><li>Nutrition targets</li><li>Price comparison (coming soon)</li></ul><button class="btn" onclick="fakeCheckout()">Start Premium</button></div>
-<div class="plan"><h3>Family</h3><div class="price">$12.99<span>/month</span></div><p>For bigger households.</p><ul><li>Everything in Premium</li><li>Larger-household planning</li><li>Shared grocery lists</li><li>Family meal preferences</li></ul><button class="btn outline" type="button" disabled>Coming soon</button></div></div></section>
+<div class="plan featured"><div class="popular">MOST POPULAR</div><h3>Premium</h3><div class="price">$7.99<span>/month</span></div><p>For busy households.</p><ul><li>Unlimited meal plans</li><li>Ingredient reuse optimizer</li><li>Saved favorites & substitutions</li><li>Nutrition targets</li><li>Live grocery price comparison (coming soon)</li></ul><button class="btn" onclick="fakeCheckout()">Start Premium</button></div>
+<div class="plan family-plan"><h3>Family</h3><div class="price">$12.99<span>/month</span></div><p>For households that plan together.</p><ul><li>Everything in Premium</li><li>Shared household profile</li><li>Shared grocery list</li><li>Family meal preferences</li></ul><button class="btn outline" type="button" onclick="startFamilyCheckout()">Start Family</button></div></div></section>
 
 <section id="faq" class="section faq"><div class="center"><span class="eyebrow">FAQ</span><h2>Simple answers before you start</h2><p>Everything you need to know about using SmartMeal.</p></div>
 <div class="faq-list">
@@ -96,5 +144,5 @@
   </div>
 </div>
 
-<script src="app.js?v=20260920-finish-pass5"></script>
+<script src="app.js?v=20260920-family-pass1"></script>
 </body></html>
