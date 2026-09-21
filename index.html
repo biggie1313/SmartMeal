@@ -1,318 +1,156 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>SmartMeal — Eat well. Spend less.</title>
-<meta name="description" content="SmartMeal builds practical weekly meal plans and grocery lists around your household, budget, and meal style.">
-<meta name="theme-color" content="#173326">
-<meta property="og:title" content="SmartMeal — Eat well. Spend less.">
-<meta property="og:description" content="Plan your week, simplify your grocery list, and keep dinner moving.">
-<link rel="stylesheet" href="styles.css?v=20260921-pricecompare">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="ToolPilot helps small business owners choose simple tools for websites, customers, marketing, and day-to-day work." />
+  <title>ToolPilot — Simple Tools for Small Business</title>
+  <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-<div class="announcement"><div>Weekly meal planning, built around your life.</div><span>Free to start · Premium $7.99/mo · Family $12.99/mo</span></div><header class="nav"><div class="brand"><span class="brand-mark" aria-hidden="true">S</span><span>SmartMeal</span></div><nav><a href="#how">How it works</a><a href="#family">Family</a><a href="#pricing">Pricing</a><a href="#faq">FAQ</a><a id="dashboard-link" href="#account-dashboard" style="display:none">Dashboard</a><span id="account-status" class="pill" style="display:none"></span><button id="signup-button" class="btn small" onclick="openAuth('signup')">Try it free</button><button id="signout-button" class="btn small outline" style="display:none" onclick="signOut()">Sign out</button></nav></header>
+  <header class="site-header">
+    <a class="brand" href="#top">ToolPilot</a>
+    <nav>
+      <a href="#start">Start Here</a>
+      <a href="#tools">Tools</a>
+      <a href="#how">How It Works</a>
+    </nav>
+  </header>
 
-<section class="hero">
-<div class="hero-copy">
-<span class="pill">SMARTER WEEKS · SIMPLER SHOPPING</span>
-<h1>Your week of meals.<br><em>Planned in seconds.</em></h1>
-<p>Tell SmartMeal how many people you're feeding, what you want to spend, and how you like to eat. Get a practical 7-day meal plan and one organized grocery list.</p>
-<div class="hero-actions"><button class="btn" onclick="showApp()">Build my free week →</button><a href="#pricing" class="text-link">See what Premium adds</a></div>
-<div class="trust"><span>✓ Personalized to your household</span><span>✓ Grocery list included</span><span>✓ Free to start</span></div>
-</div>
-<div class="hero-card">
-  <div class="hero-card-badge">A week at a glance</div>
-  <div class="mini-top"><span>4 people · $80–$110</span><b>Balanced</b></div>
-  <div class="progress"><span></span></div>
-  <div class="meal-row"><span>Mon</span><strong>Chicken rice bowls</strong><b>$12</b></div>
-  <div class="meal-row"><span>Tue</span><strong>Turkey tacos</strong><b>$10</b></div>
-  <div class="meal-row"><span>Wed</span><strong>Stir-fry night</strong><b>$11</b></div>
-  <div class="meal-row faded"><span>Thu</span><strong>Chickpea pasta</strong><b>$9</b></div>
-  <div class="save">♻️ Reuse ingredients. Simplify shopping.</div>
-</div>
-</section>
-
-<section class="value-strip" aria-label="Why SmartMeal">
-  <div class="value-item"><span class="value-icon">01</span><div><strong>Plan around your budget</strong><p>Choose a weekly range before SmartMeal builds the menu.</p></div></div>
-  <div class="value-item"><span class="value-icon">02</span><div><strong>Get the whole week in one place</strong><p>Meals and your grocery checklist stay together.</p></div></div>
-  <div class="value-item"><span class="value-icon">03</span><div><strong>Upgrade only when you need more</strong><p>Start free, then add saved plans, nutrition targets, and Family tools.</p></div></div>
-</section>
-
-<section id="how" class="section"><div class="center"><span class="eyebrow">HOW IT WORKS</span><h2>A simpler week starts with one plan.</h2><p>Choose a household size, budget and meal style. SmartMeal turns those choices into a ready-to-use week.</p></div>
-<div class="steps"><div><span>01</span><h3>Set your preferences</h3><p>Pick your household size, budget and meal style.</p></div><div><span>02</span><h3>Get your week</h3><p>Get seven days of meals designed around your choices.</p></div><div><span>03</span><h3>Shop & cook</h3><p>Work from one organized grocery checklist and save your favorites.</p></div></div></section>
-
-<section class="app-section" id="app"><div class="app-wrap"><div><span class="eyebrow">FREE PLANNER</span><h2>Build your first week</h2><p>Create a free account to build your week. Upgrade only when you want more control.</p></div>
-<div class="planner"><div class="controls"><label>Household<select id="people"><option>1</option><option>2</option><option>3</option><option selected>4</option><option>5</option><option>6</option><option>7</option><option>8</option><option>9</option><option>10</option></select></label>
-<label>Weekly budget<select id="budget"><option value="tight">$50–$70</option><option value="low">$70–$90</option><option value="mid" selected>$90–$120</option><option value="high">$120–$160</option><option value="premium">$160+</option></select></label>
-<label>Style<select id="diet"><option value="any">Balanced</option><option value="vegetarian">Vegetarian</option><option value="highprotein">High protein</option><option value="lowercarb">Lower carb</option><option value="mediterranean">Mediterranean</option><option value="familyfriendly">Family-friendly</option></select></label>
-<button class="btn" onclick="generate()">Generate my plan</button></div>
-<div class="preference-box">
-  <div class="preference-head">
-    <div><strong>Healthy foods you like</strong><p>Choose up to 12 foods. SmartMeal will use your picks to build 3 healthy meals a day for 7 days.</p></div>
-    <div class="preference-count"><span id="preferred-grocery-count">0 / 12</span> selected</div>
-  </div>
-  <div class="preference-toolbar">
-    <button class="btn outline small" type="button" id="select-all-foods">Select all (up to 12)</button>
-    <button class="text-link preference-clear" type="button" id="clear-preferred-groceries">Clear all foods</button>
-  </div>
-  <div class="food-group" data-food-group="breakfast">
-    <div class="food-group-head"><h4>Breakfast favorites</h4><button class="text-link" type="button" data-select-food-group="breakfast">Select all</button></div>
-    <div id="grocery-preferences" class="grocery-preferences">
-      <label><input type="checkbox" data-preferred-grocery="Oats"> Oats</label>
-      <label><input type="checkbox" data-preferred-grocery="Bananas"> Bananas</label>
-      <label><input type="checkbox" data-preferred-grocery="Berries"> Berries</label>
-      <label><input type="checkbox" data-preferred-grocery="Greek yogurt"> Greek yogurt</label>
-      <label><input type="checkbox" data-preferred-grocery="Eggs"> Eggs</label>
-      <label><input type="checkbox" data-preferred-grocery="Avocado"> Avocado</label>
-      <label><input type="checkbox" data-preferred-grocery="Apples"> Apples</label>
-      <label><input type="checkbox" data-preferred-grocery="Peanut butter"> Peanut butter</label>
-      <label><input type="checkbox" data-preferred-grocery="Chia seeds"> Chia seeds</label>
-      <label><input type="checkbox" data-preferred-grocery="Whole-grain bread"> Whole-grain bread</label>
-      <label><input type="checkbox" data-preferred-grocery="Almonds"> Almonds</label>
-      <label><input type="checkbox" data-preferred-grocery="Walnuts"> Walnuts</label>
-      <label><input type="checkbox" data-preferred-grocery="Pumpkin seeds"> Pumpkin seeds</label>
-    </div>
-  </div>
-  <div class="food-group" data-food-group="produce">
-    <div class="food-group-head"><h4>Vegetables & produce</h4><button class="text-link" type="button" data-select-food-group="produce">Select all</button></div>
-    <div class="grocery-preferences">
-      <label><input type="checkbox" data-preferred-grocery="Spinach"> Spinach</label>
-      <label><input type="checkbox" data-preferred-grocery="Tomatoes"> Tomatoes</label>
-      <label><input type="checkbox" data-preferred-grocery="Broccoli"> Broccoli</label>
-      <label><input type="checkbox" data-preferred-grocery="Carrots"> Carrots</label>
-      <label><input type="checkbox" data-preferred-grocery="Mixed vegetables"> Mixed vegetables</label>
-      <label><input type="checkbox" data-preferred-grocery="Sweet potatoes"> Sweet potatoes</label>
-      <label><input type="checkbox" data-preferred-grocery="Hummus"> Hummus</label>
-    </div>
-  </div>
-  <div class="food-group" data-food-group="protein">
-    <div class="food-group-head"><h4>Protein & plant proteins</h4><button class="text-link" type="button" data-select-food-group="protein">Select all</button></div>
-    <div class="grocery-preferences">
-      <label><input type="checkbox" data-preferred-grocery="Chicken breast"> Chicken breast</label>
-      <label><input type="checkbox" data-preferred-grocery="Turkey"> Turkey</label>
-      <label><input type="checkbox" data-preferred-grocery="Salmon"> Salmon</label>
-      <label><input type="checkbox" data-preferred-grocery="Tuna"> Tuna</label>
-      <label><input type="checkbox" data-preferred-grocery="Shrimp"> Shrimp</label>
-      <label><input type="checkbox" data-preferred-grocery="Tofu"> Tofu</label>
-      <label><input type="checkbox" data-preferred-grocery="Chickpeas"> Chickpeas</label>
-      <label><input type="checkbox" data-preferred-grocery="Lentils"> Lentils</label>
-      <label><input type="checkbox" data-preferred-grocery="Black beans"> Black beans</label>
-      <label><input type="checkbox" data-preferred-grocery="Beans"> Beans</label>
-    </div>
-  </div>
-  <div class="food-group" data-food-group="grains">
-    <div class="food-group-head"><h4>Whole grains & healthy extras</h4><button class="text-link" type="button" data-select-food-group="grains">Select all</button></div>
-    <div class="grocery-preferences">
-      <label><input type="checkbox" data-preferred-grocery="Brown rice"> Brown rice</label>
-      <label><input type="checkbox" data-preferred-grocery="Quinoa"> Quinoa</label>
-      <label><input type="checkbox" data-preferred-grocery="Whole-grain tortillas"> Whole-grain tortillas</label>
-      <label><input type="checkbox" data-preferred-grocery="Olive oil"> Olive oil</label>
-    </div>
-  </div>
-  <div class="food-group exclusions-group">
-    <div class="food-group-head"><div><h4>Dietary exclusions</h4><p class="food-group-note">SmartMeal will avoid these in the generated week.</p></div><span class="preference-count"><span id="dietary-exclusion-count">0</span> selected</span></div>
-    <div id="dietary-exclusions" class="grocery-preferences exclusion-list">
-      <label><input type="checkbox" data-dietary-exclusion="Dairy"> Dairy</label>
-      <label><input type="checkbox" data-dietary-exclusion="Eggs"> Eggs</label>
-      <label><input type="checkbox" data-dietary-exclusion="Gluten"> Gluten</label>
-      <label><input type="checkbox" data-dietary-exclusion="Nuts"> Nuts</label>
-      <label><input type="checkbox" data-dietary-exclusion="Seafood"> Seafood</label>
-      <label><input type="checkbox" data-dietary-exclusion="Soy"> Soy</label>
-      <label><input type="checkbox" data-dietary-exclusion="Poultry"> Poultry</label>
-    </div>
-  </div>
-</div>
-<div id="premium-tools" class="premium-tools" style="display:none;margin:18px 0;padding:16px;border:1px solid #ddd;border-radius:14px">
-  <div style="display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap">
-    <div><b>✨ Premium tools</b><div style="font-size:14px;opacity:.75">Fine-tune your plan with advanced options.</div></div>
-    <span class="pill">PREMIUM</span>
-  </div>
-  <div style="display:flex;gap:14px;flex-wrap:wrap;margin-top:14px">
-    <label class="nutrition-control">Nutrition focus
-  <select id="nutrition-target">
-    <option value="balanced">Balanced</option>
-    <option value="highprotein">Higher protein</option>
-    <option value="lowercarb">Lower carb</option>
-    <option value="higherfiber">Higher fiber</option>
-    <option value="mediterranean">Mediterranean</option>
-  </select>
-  <small>Choose the main nutrition direction for this week's meals.</small>
-</label>
-    <label style="display:flex;align-items:center;gap:8px;min-width:220px"><input id="reuse-optimizer" type="checkbox" checked> Optimize ingredient reuse</label>
-    <button class="btn outline" type="button" onclick="saveCurrentPlan()">♡ Save this week</button><button class="btn outline" type="button" onclick="openCustomerPortal()">Manage subscription</button>
-  </div>
-</div>
-<section id="account-dashboard" class="account-dashboard" style="display:none" aria-label="SmartMeal account dashboard">
-  <div class="dashboard-head">
-    <div>
-      <span class="eyebrow">MY SMARTMEAL</span>
-      <h3 id="dashboard-user-label">Your SmartMeal account</h3>
-      <p id="dashboard-session-text">Your saved weeks and favorite recipes stay connected to this account.</p>
-      <small id="dashboard-email"></small>
-    </div>
-    <span id="dashboard-plan-pill" class="pill">Free</span>
-  </div>
-  <div class="dashboard-stats">
-    <div class="dashboard-stat"><span>Plan</span><strong id="dashboard-plan">Free</strong></div>
-    <div class="dashboard-stat"><span>Saved weeks</span><strong id="dashboard-saved-count">0</strong></div>
-    <div class="dashboard-stat"><span>Favorite recipes</span><strong id="dashboard-favorite-count">0</strong></div>
-    <div class="dashboard-stat"><span>Family</span><strong id="dashboard-family">Not included</strong></div>
-  </div>
-  <div class="dashboard-actions">
-    <button class="btn small" type="button" onclick="showAccountPlanner()">＋ Build a new week</button>
-    <button class="btn outline small" type="button" onclick="showSavedPlans()">Saved weeks</button>
-    <button class="btn outline small" type="button" onclick="showFavoriteRecipes()">Favorite recipes</button>
-    <button id="dashboard-manage" class="btn outline small" type="button" style="display:none" onclick="openCustomerPortal()">Manage subscription</button>
-    <button id="dashboard-family-button" class="btn outline small" type="button" style="display:none" onclick="document.getElementById('family')?.scrollIntoView({behavior:'smooth'})">Open Family</button>
-  </div>
-</section>
-
-<div id="premium-upsell" class="premium-upsell" style="margin:18px 0;padding:16px;border:1px dashed #bbb;border-radius:14px">
-  <b>🔒 Premium tools are locked</b>
-  <div style="margin:6px 0 12px">Upgrade to unlock nutrition targets, ingredient-reuse optimization, and saved favorites.</div>
-  <button class="btn small" type="button" onclick="fakeCheckout()">Unlock Premium · $7.99/month</button>
-</div>
-<div id="result" class="result"></div>
-
-<div id="saved-plans" class="saved-plans" style="display:none;margin-top:34px">
-  <div style="display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap">
-    <div><span class="eyebrow">MY ACCOUNT</span><h3 style="margin:4px 0">My saved plans</h3><p style="margin:0;color:#66736a">Your saved weeks are stored with your SmartMeal account.</p></div>
-    <button class="btn outline small" type="button" onclick="loadSavedPlans()">↻ Refresh</button>
-  </div>
-  <div id="saved-plans-list" class="saved-plans-list"></div>
-</div>
-
-<div id="favorite-meals" class="favorite-meals" style="display:none;margin-top:24px">
-  <div><span class="eyebrow">PREMIUM</span><h3 style="margin:4px 0">Favorite meals</h3><p style="margin:0;color:#66736a">Save meals you want to come back to later.</p></div>
-  <div id="favorite-meals-list" class="favorite-meals-list"></div>
-</div></div></div></section>
-
-<section id="family" class="section family-section">
-  <div class="center"><span class="eyebrow">FAMILY HOUSEHOLD</span><h2>Plan together, shop together.</h2><p>Family subscribers can create a shared household, invite members with a simple code, and keep one grocery list and one set of meal preferences in sync.</p></div>
-  <div id="family-tools" class="family-tools" style="display:none">
-    <div id="family-onboarding" class="family-card">
-      <h3>Create or join your household</h3>
-      <p>Choose a name for your household, or enter an invite code from someone already in your family account.</p>
-      <div class="family-actions">
-        <div class="family-action-box">
-          <label>Household name<input id="family-name" type="text" maxlength="60" placeholder="The Smith family"></label>
-          <button class="btn small" type="button" onclick="createFamilyHousehold()">Create household</button>
+  <main id="top">
+    <section class="hero">
+      <div class="hero-copy">
+        <span class="eyebrow">Simple choices. Less wasted time.</span>
+        <h1>Find the right tools to run your small business online.</h1>
+        <p class="lead">Tell us what you are trying to do and ToolPilot points you toward practical software and services without the jargon.</p>
+        <div class="hero-actions">
+          <a class="button primary" href="#start">Find my tools</a>
+          <a class="button secondary" href="#tools">Browse recommendations</a>
         </div>
-        <div class="family-action-box">
-          <label>Invite code<input id="family-join-code" type="text" maxlength="8" placeholder="AB12CD34"></label>
-          <button class="btn outline small" type="button" onclick="joinFamilyHousehold()">Join household</button>
+        <p class="disclosure">Disclosure: Some links may become affiliate links. If you buy through one, ToolPilot may earn a commission at no extra cost to you. Recommendations are based on fit, not commission.</p>
+      </div>
+      <div class="hero-card">
+        <div class="mini-label">Popular goal</div>
+        <h2>“I want to get more organized.”</h2>
+        <p>Start with a customer-management tool before adding more apps.</p>
+        <div class="mini-result">
+          <span>Recommended first step</span>
+          <strong>Simple CRM</strong>
         </div>
       </div>
-    </div>
+    </section>
 
-    <div id="family-dashboard" class="family-card" style="display:none">
-      <div class="family-dashboard-head">
-        <div><span class="eyebrow">YOUR HOUSEHOLD</span><h3 id="family-household-name">My Family</h3><p id="family-member-count">0 members</p></div>
-        <div class="family-invite"><span>Invite code</span><strong id="family-invite-code">--------</strong><button class="btn outline small" type="button" onclick="copyFamilyInviteCode()">Copy code</button></div>
+    <section id="start" class="section">
+      <div class="section-heading">
+        <span class="eyebrow">Start here</span>
+        <h2>What are you trying to do?</h2>
+        <p>Choose one goal. We will show you the simplest place to start.</p>
       </div>
 
-      <div class="family-grid">
-        <div class="family-panel">
-          <h4>Family preferences</h4>
-          <label>Meal style<select id="family-diet"><option value="balanced">Balanced</option><option value="vegetarian">Vegetarian</option><option value="highprotein">High protein</option><option value="lowercarb">Lower carb</option></select></label>
-          <label>Notes<textarea id="family-notes" rows="4" maxlength="500" placeholder="Things everyone should know about meals…"></textarea></label>
-          <div class="family-preference-actions"><button class="btn small" type="button" onclick="saveFamilyPreferences()">Save preferences</button><button class="btn outline small" type="button" onclick="useFamilyPreferences()">Use for my next plan</button></div>
-        </div>
-
-        <div class="family-panel">
-          <h4>Shared grocery list</h4>
-          <div class="family-grocery-add"><input id="family-grocery-input" type="text" maxlength="100" placeholder="Add milk, apples, rice…"><button class="btn small" type="button" onclick="addFamilyGroceryItem()">Add</button></div><button class="btn outline small" type="button" onclick="shareCurrentGroceries()">Add my generated groceries</button>
-          <div id="family-grocery-list" class="family-grocery-list"></div>
-        </div>
-
-        <div class="family-panel">
-          <h4>Household members</h4>
-          <div id="family-members-list" class="family-members-list"></div>
-        </div>
+      <div class="goal-grid">
+        <button class="goal-card" data-goal="customers">
+          <span class="icon">👥</span>
+          <strong>Keep track of customers</strong>
+          <span>Leads, follow-ups, contacts</span>
+        </button>
+        <button class="goal-card" data-goal="website">
+          <span class="icon">🌐</span>
+          <strong>Build a website</strong>
+          <span>Get your business online</span>
+        </button>
+        <button class="goal-card" data-goal="marketing">
+          <span class="icon">📣</span>
+          <strong>Market my business</strong>
+          <span>Content, email, visibility</span>
+        </button>
+        <button class="goal-card" data-goal="design">
+          <span class="icon">🎨</span>
+          <strong>Create better visuals</strong>
+          <span>Posts, flyers, presentations</span>
+        </button>
       </div>
-      <button class="btn outline small" type="button" onclick="loadFamilyHousehold()">↻ Refresh household</button>
-    </div>
-  </div>
-</section>
 
-<section id="pricing" class="section pricing"><div class="center"><span class="eyebrow">PRICING</span><h2>Start free. Upgrade when SmartMeal saves you time.</h2></div>
-<div class="plans"><div class="plan"><h3>Free</h3><div class="price">$0<span>/month</span></div><p>For trying SmartMeal.</p><ul><li>7-day meal plan</li><li>Grocery checklist</li><li>Basic preferences</li></ul><button class="btn outline" onclick="showApp()">Start free</button></div>
-<div class="plan featured"><div class="popular">MOST POPULAR</div><h3>Premium</h3><div class="price">$7.99<span>/month</span></div><p>For busy households.</p><ul><li>Unlimited meal plans</li><li>Ingredient reuse optimizer</li><li>Saved favorites & substitutions</li><li>Nutrition targets</li><li>Live grocery price comparison · coming soon</li></ul><button class="btn" onclick="fakeCheckout()">Start Premium</button></div>
-<div class="plan family-plan"><h3>Family</h3><div class="price">$12.99<span>/month</span></div><p>For households that plan together.</p><ul><li>Everything in Premium</li><li>Shared household profile</li><li>Shared grocery list</li><li>Family meal preferences</li></ul><button class="btn outline" type="button" onclick="startFamilyCheckout()">Start Family</button></div></div></section>
+      <div id="recommendation" class="recommendation" aria-live="polite">
+        <p>Pick a goal above to see a starting recommendation.</p>
+      </div>
+    </section>
 
-<section id="faq" class="section faq"><div class="center"><span class="eyebrow">FAQ</span><h2>Simple answers before you start</h2><p>Everything you need to know about using SmartMeal.</p></div>
-<div class="faq-list">
-  <details open><summary>What do I get for free?</summary><p>You can create an account, generate a 7-day meal plan, and use the grocery checklist without paying.</p></details>
-  <details><summary>What does Premium unlock?</summary><p>Premium adds nutrition targets, ingredient-reuse preferences, saved weekly plans, meal favorites, and meal substitutions.</p></details>
-  <details><summary>How does billing work?</summary><p>Premium is billed monthly through Stripe. Subscription management is provided through the secure Stripe billing portal.</p></details>
-  <details><summary>Can I cancel later?</summary><p>Yes. Premium members can open Manage subscription from the planner to access the Stripe billing portal and manage their subscription.</p></details>
-  <details><summary>What does Family include?</summary><p>Family adds a shared household, shared meal preferences, shared grocery lists, and invite codes for household members.</p></details>
-</div></section>
+    <section id="tools" class="section muted-section">
+      <div class="section-heading">
+        <span class="eyebrow">Recommended tools</span>
+        <h2>Start with one useful tool, not ten.</h2>
+        <p>These are broad starting points. Always check current pricing and terms on the provider's site before buying.</p>
+      </div>
 
-<footer><div class="brand footer-brand"><span class="brand-mark" aria-hidden="true">S</span><span>SmartMeal</span></div><p>Plan smarter. Shop simpler. Waste less.</p><small>Meal planning, saved plans, family tools, and secure checkout in one place.</small><div class="footer-note">© 2026 SmartMeal · Live grocery price comparison is coming soon.</div></footer>
-<div id="toast" class="toast"></div>
+      <div class="tool-grid">
+        <article class="tool-card featured">
+          <div class="tag">Good first CRM</div>
+          <h3>HubSpot</h3>
+          <p class="tool-subtitle">Customer management, sales follow-up, forms, and marketing tools.</p>
+          <ul>
+            <li>Useful for tracking leads and customer conversations</li>
+            <li>Free tools are available</li>
+            <li>Can grow with a business over time</li>
+          </ul>
+          <p class="best-for"><strong>Best for:</strong> small businesses that need one place to organize customers and follow-ups.</p>
+          <a class="button primary full" href="https://www.hubspot.com/" target="_blank" rel="noopener noreferrer">Visit HubSpot</a>
+          <small>Current link is not an affiliate link. If ToolPilot is approved for the program, this button can be updated.</small>
+        </article>
 
-<div id="auth-modal" class="auth-modal" aria-hidden="true">
-  <div class="auth-card">
-    <button class="auth-close" onclick="closeAuth()" aria-label="Close">×</button>
-    <span class="eyebrow">SMARTMEAL ACCOUNT</span>
-    <h2 id="auth-title">Create your account</h2>
-    <p id="auth-subtitle">Use your email and password to get started.</p>
+        <article class="tool-card">
+          <div class="tag">Website & store</div>
+          <h3>Shopify</h3>
+          <p class="tool-subtitle">A platform for creating an online store and selling products.</p>
+          <ul>
+            <li>Storefront and checkout in one platform</li>
+            <li>Useful when selling products online is the main goal</li>
+            <li>May be more than you need for a simple service website</li>
+          </ul>
+          <p class="best-for"><strong>Best for:</strong> businesses planning to sell products online.</p>
+          <a class="button secondary full" href="https://www.shopify.com/" target="_blank" rel="noopener noreferrer">Visit Shopify</a>
+        </article>
 
-    <form id="auth-form" onsubmit="submitAuth(event)">
-      <label id="auth-email-label">Email<input id="auth-email" type="email" autocomplete="email" required></label>
-      <label id="auth-password-label">Password<input id="auth-password" type="password" autocomplete="current-password" minlength="6" required></label>
-      <button id="auth-submit" class="btn" type="submit">Create account</button>
-    </form>
+        <article class="tool-card">
+          <div class="tag">Design</div>
+          <h3>Canva</h3>
+          <p class="tool-subtitle">Design software for social posts, flyers, presentations, and simple marketing assets.</p>
+          <ul>
+            <li>Easy starting point for non-designers</li>
+            <li>Many ready-made templates</li>
+            <li>Free and paid options</li>
+          </ul>
+          <p class="best-for"><strong>Best for:</strong> businesses that need regular visual content without hiring a designer.</p>
+          <a class="button secondary full" href="https://www.canva.com/" target="_blank" rel="noopener noreferrer">Visit Canva</a>
+        </article>
+      </div>
+    </section>
 
-    <p id="auth-message" class="auth-message"></p>
-    <button id="auth-reset" class="text-link auth-switch" type="button" onclick="requestPasswordReset()">Forgot password?</button>
-    <button id="auth-resend" class="text-link auth-switch" type="button" onclick="resendConfirmation()">Resend confirmation email</button>
-    <button id="auth-switch" class="text-link auth-switch" type="button" onclick="toggleAuthMode()">Already have an account? Sign in</button>
-  </div>
-</div>
+    <section id="how" class="section">
+      <div class="section-heading">
+        <span class="eyebrow">How ToolPilot works</span>
+        <h2>Useful first. Monetized second.</h2>
+      </div>
+      <div class="steps">
+        <div><span>1</span><h3>Choose a goal</h3><p>Start with the problem you actually need to solve.</p></div>
+        <div><span>2</span><h3>Compare simply</h3><p>See what each tool is good for and where it may not fit.</p></div>
+        <div><span>3</span><h3>Use official links</h3><p>Check current pricing, features, and terms directly with the provider.</p></div>
+      </div>
+    </section>
 
-<script src="app.js?v=20260920-itemprices-v1"></script>
+    <section class="cta">
+      <span class="eyebrow">Built for small business owners</span>
+      <h2>One problem. One tool. One next step.</h2>
+      <p>ToolPilot will expand only around problems people actually need help solving.</p>
+      <a class="button primary" href="#start">Choose your goal</a>
+    </section>
+  </main>
 
-<div id="shopping-modal" class="shopping-modal" aria-hidden="true">
-  <div class="shopping-card" role="dialog" aria-modal="true" aria-labelledby="shopping-title">
-    <div class="shopping-head">
-      <div><span class="eyebrow">SHOPPING MODE</span><h2 id="shopping-title">Take your list with you</h2><p>Large tap targets and a focused checklist for the grocery store.</p></div>
-      <button type="button" class="recipe-close" data-shopping-close aria-label="Close shopping mode">×</button>
-    </div>
-    <div class="shopping-progress"><strong id="shopping-mode-status">0 items left</strong><span id="shopping-mode-count">0 / 0 checked</span></div>
-    <div class="shopping-toolbar">
-      <input class="shopping-search" type="search" placeholder="Search your grocery list…">
-      <button type="button" class="btn outline small" onclick="checkAllShoppingItems()">✓ Check all</button>
-    </div>
-    <div id="shopping-mode-list" class="shopping-mode-list"></div>
-    <button type="button" class="btn outline" data-shopping-close>Back to my list</button>
-  </div>
-</div>
+  <footer>
+    <strong>ToolPilot</strong>
+    <p>Independent software guidance for small business owners.</p>
+    <p class="footer-note">Tool names and trademarks belong to their respective owners. ToolPilot is not currently claiming partnership or endorsement by the companies listed above.</p>
+  </footer>
 
-<div id="recipe-modal" class="recipe-modal" aria-hidden="true">
-  <div class="recipe-card" role="dialog" aria-modal="true" aria-labelledby="recipe-title">
-    <button type="button" class="recipe-close" data-recipe-close aria-label="Close recipe">×</button>
-    <span id="recipe-type" class="eyebrow">MEAL</span>
-    <h2 id="recipe-title">Recipe</h2>
-    <p id="recipe-meta" class="recipe-meta"></p>
-    <div class="recipe-timebar" aria-label="Recipe timing">
-      <div><span>Prep</span><strong id="recipe-prep">10 min</strong></div>
-      <div><span>Cook</span><strong id="recipe-cook">15 min</strong></div>
-      <div><span>Total</span><strong id="recipe-total">25 min</strong></div>
-    </div>
-    <div class="recipe-columns">
-      <section><h3>Ingredients</h3><ul id="recipe-ingredients" class="recipe-ingredients"></ul></section>
-      <section><h3>How to make it</h3><ol id="recipe-directions" class="recipe-directions"></ol></section>
-    </div>
-    <div class="recipe-note">Quantities are scaled to the household size selected in your planner. Adjust seasoning and portions to suit your household.</div>
-    <div class="recipe-actions">
-      <button id="recipe-save" type="button" class="btn" onclick="saveRecipeFromModal()">☆ Save recipe</button>
-      <button type="button" class="btn outline" onclick="addRecipeIngredientsToGroceryList(currentRecipeMeal)">🛒 Add ingredients to grocery list</button>
-      <button type="button" class="btn outline" onclick="printRecipe()">🖨 Print recipe</button>
-    </div>
-    <button type="button" class="btn outline" data-recipe-close>Back to my week</button>
-  </div>
-</div>
-</body></html>
+  <script src="app.js"></script>
+</body>
+</html>
