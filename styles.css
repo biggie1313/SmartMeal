@@ -19,3 +19,8 @@ footer{border-top:1px solid var(--line);padding-top:34px;padding-bottom:50px;col
 @media(max-width:900px){.hero{grid-template-columns:1fr;min-height:auto}.goal-grid{grid-template-columns:repeat(2,1fr)}.tool-grid,.steps{grid-template-columns:1fr}.site-header nav{display:none}}
 @media(max-width:560px){h1{font-size:3.1rem}.hero{padding-top:52px}.goal-grid{grid-template-columns:1fr}.hero-actions{flex-direction:column}.button{width:100%}}
 .page{max-width:1180px}.page h1{max-width:900px}.compact{padding-top:42px;padding-bottom:42px}.footer-links a{text-decoration:underline;text-underline-offset:3px}.footer-links{margin:.4rem 0 1rem}
+
+.demo-banner{padding:10px 18px;text-align:center;background:#f2f5ff;color:#16224b;font-size:.78rem;font-weight:800;letter-spacing:.04em;border-bottom:1px solid var(--line)}
+.demo-hero{padding-top:64px}
+.two-col{grid-template-columns:repeat(2,1fr)}
+@media(max-width:900px){.two-col{grid-template-columns:1fr}}
