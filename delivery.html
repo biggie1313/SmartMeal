@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ToolPilot — Your Website Starter Kit</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="index.html">ToolPilot</a>
+    <nav><a href="index.html">Home</a><a href="services.html">Website Service</a><a href="about.html">About</a></nav>
+  </header>
+  <main class="section page">
+    <section class="cta">
+      <span class="eyebrow">Purchase complete</span>
+      <h1>Your Small Business Website Starter Kit</h1>
+      <p>This demo delivery page is connected to the test-mode checkout. Click the button below to generate your copy of the starter kit as a text file.</p>
+      <button class="button primary" id="download">Download the starter kit</button>
+      <p class="disclosure">This is a test checkout. Before accepting real payments, the product delivery process, pricing, legal terms, and live Stripe settings should be reviewed.</p>
+    </section>
+  </main>
+  <footer>
+    <strong>ToolPilot</strong>
+    <p>Practical tools and services for small businesses.</p>
+  </footer>
+  <script>
+    const kit = `TOOLPILOT — SMALL BUSINESS WEBSITE STARTER KIT
+
+1) BUSINESS BASICS
+Business name:
+Tagline:
+City / service area:
+Phone:
+Email:
+Website:
+Primary call to action:
+
+2) SERVICES
+Service 1:
+Service 2:
+Service 3:
+What makes the business different?
+
+3) ABOUT
+Write 3–5 sentences about the business, who it serves, experience, and what customers can expect.
+
+4) HOME PAGE COPY PROMPTS
+Headline: What is the clearest result you provide?
+Subheadline: Who do you help and what do you do?
+CTA: What should the visitor do next?
+
+5) LAUNCH CHECKLIST
+[ ] Business name and contact details checked
+[ ] Services and prices checked
+[ ] Phone and email links tested
+[ ] Mobile layout checked
+[ ] Images have permission to be used
+[ ] Privacy / legal requirements reviewed
+[ ] Domain and hosting settings reviewed
+[ ] Final customer approval received
+
+6) HANDOFF CHECKLIST
+[ ] Final files delivered
+[ ] Customer knows where the site is hosted
+[ ] Customer knows how to request changes
+[ ] Any third-party subscriptions are documented
+[ ] Credentials are transferred securely
+
+This kit is an informational template, not legal, tax, or business advice.
+`;
+
+    document.getElementById("download").addEventListener("click", () => {
+      const blob = new Blob([kit], {type:"text/plain;charset=utf-8"});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "ToolPilot-Small-Business-Website-Starter-Kit.txt";
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+  </script>
+</body>
+</html>
