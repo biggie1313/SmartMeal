@@ -18,3 +18,4 @@ h1,h2,h3,p{margin-top:0}h1{font-size:clamp(3rem,7vw,6.3rem);line-height:.96;lett
 footer{border-top:1px solid var(--line);padding-top:34px;padding-bottom:50px;color:var(--muted)}footer strong{color:var(--text)}.footer-note{font-size:.8rem;max-width:760px}
 @media(max-width:900px){.hero{grid-template-columns:1fr;min-height:auto}.goal-grid{grid-template-columns:repeat(2,1fr)}.tool-grid,.steps{grid-template-columns:1fr}.site-header nav{display:none}}
 @media(max-width:560px){h1{font-size:3.1rem}.hero{padding-top:52px}.goal-grid{grid-template-columns:1fr}.hero-actions{flex-direction:column}.button{width:100%}}
+.page{max-width:1180px}.page h1{max-width:900px}.compact{padding-top:42px;padding-bottom:42px}.footer-links a{text-decoration:underline;text-underline-offset:3px}.footer-links{margin:.4rem 0 1rem}
