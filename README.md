@@ -27,6 +27,16 @@ The repository still contains legacy SmartMeal files and API code from the origi
 
 Some links may become affiliate links. If a visitor buys through an affiliate link, ToolPilot may earn a commission at no extra cost to the visitor. Recommendations should be based on fit and clearly disclosed.
 
+## Website service offer
+
+ToolPilot now includes a sellable website-service offer:
+- Starter one-page website: starting at $99
+- Small business site: starting at $179
+- Optional extras quoted before work begins
+- A fictional demo business page is included as a portfolio sample
+
+These are starting prices, not guarantees of project scope or customer demand. Third-party hosting, domains, paid software, and subscriptions are separate unless agreed otherwise.
+
 ## Next steps
 
 1. Confirm the Vercel deployment is serving the ToolPilot build.
