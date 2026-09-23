@@ -24,3 +24,5 @@ footer{border-top:1px solid var(--line);padding-top:34px;padding-bottom:50px;col
 .demo-hero{padding-top:64px}
 .two-col{grid-template-columns:repeat(2,1fr)}
 @media(max-width:900px){.two-col{grid-template-columns:1fr}}
+
+.price-badge{display:inline-flex;align-items:center;min-height:48px;padding:0 16px;border:1px solid var(--line);border-radius:12px;background:var(--panel);font-weight:800}.price-line{font-size:2.2rem;font-weight:900;letter-spacing:-.04em;margin:10px 0 6px}.small-note{color:var(--muted);font-size:.85rem;max-width:680px;margin:0 auto 18px}
