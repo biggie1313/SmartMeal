@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Free cleaning business quote calculator. Estimate labor, travel, supplies, overhead, and a target-profit quote in under a minute." />
+  <title>Free Cleaning Quote Calculator | ToolPilot</title>
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    .calc-wrap{max-width:980px;margin:0 auto}
+    .calc-grid{display:grid;grid-template-columns:1.1fr .9fr;gap:22px}
+    .calc-card{background:var(--panel);border:1px solid var(--line);border-radius:22px;padding:26px}
+    .field-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
+    .field label{display:block;font-weight:800;font-size:.9rem;margin-bottom:7px}
+    .field input,.field select{width:100%;min-height:46px;border-radius:11px;border:1px solid var(--line);background:#0d142a;color:var(--text);padding:0 12px;font:inherit}
+    .field small{display:block;color:var(--muted);margin-top:5px;font-size:.76rem}
+    .result{position:sticky;top:95px}
+    .result-total{font-size:3.2rem;line-height:1;font-weight:900;letter-spacing:-.06em;margin:10px 0 16px}
+    .breakdown{border-top:1px solid var(--line);margin-top:18px;padding-top:18px}
+    .breakdown-row{display:flex;justify-content:space-between;gap:14px;padding:8px 0;color:var(--muted)}
+    .breakdown-row strong{color:var(--text)}
+    .calc-note{margin-top:14px;color:var(--muted);font-size:.82rem}
+    .calc-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
+    @media(max-width:900px){.calc-grid{grid-template-columns:1fr}.result{position:static}}
+    @media(max-width:560px){.field-grid{grid-template-columns:1fr}.result-total{font-size:2.6rem}}
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="index.html">ToolPilot</a>
+    <nav>
+      <a href="cleaning-quote-calculator.html">Free Calculator</a>
+      <a href="cleaning-business-kit.html">Pricing Kit</a>
+      <a href="services.html">Website Service</a>
+      <a href="about.html">About</a>
+    </nav>
+  </header>
+
+  <main class="section page">
+    <section class="section-heading">
+      <span class="eyebrow">Free tool</span>
+      <h1>Cleaning Business Quote Calculator</h1>
+      <p>Enter your job assumptions to get a starting quote. This is a planning calculator, not a guaranteed market rate.</p>
+    </section>
+
+    <div class="calc-wrap">
+      <div class="calc-grid">
+        <section class="calc-card">
+          <div class="tag">Step 1</div>
+          <h2>Tell us about the job</h2>
+          <div class="field-grid">
+            <div class="field">
+              <label for="jobType">Job type</label>
+              <select id="jobType">
+                <option value="standard">Standard clean</option>
+                <option value="deep">Deep clean</option>
+                <option value="move">Move-in / move-out</option>
+                <option value="airbnb">Short-term rental turnover</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="frequency">Frequency</label>
+              <select id="frequency">
+                <option value="one">One-time</option>
+                <option value="weekly">Weekly</option>
+                <option value="biweekly">Every 2 weeks</option>
+                <option value="monthly">Monthly</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="hours">Estimated labor hours</label>
+              <input id="hours" type="number" min="0.5" step="0.5" value="3" />
+              <small>Total person-hours for the job.</small>
+            </div>
+            <div class="field">
+              <label for="rate">Target labor rate (CAD/hour)</label>
+              <input id="rate" type="number" min="1" step="0.50" value="30" />
+              <small>Your internal labor cost/target rate, not a market promise.</small>
+            </div>
+            <div class="field">
+              <label for="travel">Travel cost (CAD)</label>
+              <input id="travel" type="number" min="0" step="1" value="10" />
+            </div>
+            <div class="field">
+              <label for="supplies">Supplies cost (CAD)</label>
+              <input id="supplies" type="number" min="0" step="1" value="8" />
+            </div>
+            <div class="field">
+              <label for="overhead">Overhead allocation (CAD)</label>
+              <input id="overhead" type="number" min="0" step="1" value="7" />
+              <small>Insurance, software, admin, equipment, etc.</small>
+            </div>
+            <div class="field">
+              <label for="margin">Target margin (%)</label>
+              <input id="margin" type="number" min="0" max="80" step="1" value="20" />
+              <small>Applied to the cost base.</small>
+            </div>
+            <div class="field">
+              <label for="extra">Add-ons (CAD)</label>
+              <input id="extra" type="number" min="0" step="1" value="0" />
+              <small>Oven, fridge, inside windows, pet hair, etc.</small>
+            </div>
+            <div class="field">
+              <label for="discount">Discount (CAD)</label>
+              <input id="discount" type="number" min="0" step="1" value="0" />
+            </div>
+          </div>
+
+          <div class="calc-actions">
+            <button class="button primary" id="calculate" type="button">Calculate quote</button>
+            <button class="button secondary" id="reset" type="button">Reset</button>
+          </div>
+        </section>
+
+        <aside class="calc-card result" aria-live="polite">
+          <div class="tag">Step 2</div>
+          <h2>Starting quote</h2>
+          <div class="result-total" id="total">$0.00</div>
+          <p id="headline">Enter your job assumptions and calculate a starting quote.</p>
+
+          <div class="breakdown">
+            <div class="breakdown-row"><span>Labor</span><strong id="labor">$0.00</strong></div>
+            <div class="breakdown-row"><span>Travel</span><strong id="travelOut">$0.00</strong></div>
+            <div class="breakdown-row"><span>Supplies</span><strong id="suppliesOut">$0.00</strong></div>
+            <div class="breakdown-row"><span>Overhead</span><strong id="overheadOut">$0.00</strong></div>
+            <div class="breakdown-row"><span>Target margin</span><strong id="marginOut">$0.00</strong></div>
+            <div class="breakdown-row"><span>Add-ons</span><strong id="extraOut">$0.00</strong></div>
+            <div class="breakdown-row"><span>Discount</span><strong id="discountOut">-$0.00</strong></div>
+          </div>
+
+          <p class="calc-note"><strong>Important:</strong> Compare this starting number with your actual costs, local market conditions, taxes, customer expectations, and business requirements before sending a quote.</p>
+
+          <div class="calc-actions">
+            <button class="button secondary" id="print" type="button">Print / save quote</button>
+            <a class="button primary" href="#complete-kit">See the full kit</a>
+          </div>
+        </aside>
+      </div>
+    </div>
+
+    <section class="section compact" id="complete-kit">
+      <div class="cta">
+        <span class="eyebrow">Need the complete system?</span>
+        <h2>Use the full Cleaning Business Quote & Pricing Starter Kit.</h2>
+        <p>Get the editable calculator plus quote template, client intake form, job checklist, follow-up scripts, and lead tracker.</p>
+        <div class="price-line">$12 CAD</div>
+        <a class="button primary" href="cleaning-business-kit.html">View the complete kit</a>
+      </div>
+    </section>
+
+    <section class="section compact">
+      <div class="section-heading">
+        <span class="eyebrow">How the math works</span>
+        <h2>A transparent starting formula.</h2>
+        <p><strong>Cost base = labor + travel + supplies + overhead.</strong> Target margin is then applied to that cost base, add-ons are added, and any discount is removed. You can change every input to match your own business model.</p>
+        <p>This calculator intentionally does not claim that the result is the “correct” price for your market. It is a starting point you should validate against real costs and local demand.</p>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <strong>ToolPilot</strong>
+    <p>Practical tools and guides for small businesses.</p>
+    <p class="footer-links"><a href="cleaning-business-kit.html">Pricing Kit</a> · <a href="services.html">Website Service</a> · <a href="about.html">About & Disclosure</a> · <a href="privacy.html">Privacy</a></p>
+  </footer>
+
+  <script>
+    const ids = ["jobType","frequency","hours","rate","travel","supplies","overhead","margin","extra","discount"];
+    const money = n => new Intl.NumberFormat("en-CA",{style:"currency",currency:"CAD"}).format(n);
+
+    function value(id){
+      const n = Number(document.getElementById(id).value);
+      return Number.isFinite(n) ? Math.max(0,n) : 0;
+    }
+
+    function calculate(){
+      const hours = value("hours");
+      const rate = value("rate");
+      const travel = value("travel");
+      const supplies = value("supplies");
+      const overhead = value("overhead");
+      const marginPct = Math.min(80,value("margin"));
+      const extra = value("extra");
+      const discount = value("discount");
+
+      const labor = hours * rate;
+      const base = labor + travel + supplies + overhead;
+      const margin = base * (marginPct / 100);
+      const total = Math.max(0, base + margin + extra - discount);
+
+      document.getElementById("labor").textContent = money(labor);
+      document.getElementById("travelOut").textContent = money(travel);
+      document.getElementById("suppliesOut").textContent = money(supplies);
+      document.getElementById("overheadOut").textContent = money(overhead);
+      document.getElementById("marginOut").textContent = money(margin);
+      document.getElementById("extraOut").textContent = money(extra);
+      document.getElementById("discountOut").textContent = "-" + money(discount);
+      document.getElementById("total").textContent = money(total);
+
+      const type = document.getElementById("jobType").selectedOptions[0].text;
+      const freq = document.getElementById("frequency").selectedOptions[0].text;
+      document.getElementById("headline").textContent =
+        type + " • " + freq + " • " + hours + " labor hour" + (hours === 1 ? "" : "s") + ". Use this as your starting quote and adjust it to your actual business costs.";
+    }
+
+    document.getElementById("calculate").addEventListener("click",calculate);
+    document.getElementById("reset").addEventListener("click",()=>{
+      document.getElementById("jobType").value="standard";
+      document.getElementById("frequency").value="one";
+      document.getElementById("hours").value="3";
+      document.getElementById("rate").value="30";
+      document.getElementById("travel").value="10";
+      document.getElementById("supplies").value="8";
+      document.getElementById("overhead").value="7";
+      document.getElementById("margin").value="20";
+      document.getElementById("extra").value="0";
+      document.getElementById("discount").value="0";
+      calculate();
+    });
+    document.getElementById("print").addEventListener("click",()=>window.print());
+    ids.forEach(id=>document.getElementById(id).addEventListener("input",calculate));
+    calculate();
+  </script>
+</body>
+</html>
